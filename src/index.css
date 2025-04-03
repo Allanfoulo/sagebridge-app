@@ -1,0 +1,225 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 204 100% 39%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 204 100% 39%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-muted: 204 100% 80%;
+    --sidebar-muted-foreground: 204 100% 95%;
+    --sidebar-accent: 204 100% 29%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 204 100% 44%;
+    --sidebar-ring: 217 91% 60%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 204 100% 39%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
+
+    --sidebar-background: 204 100% 39%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-muted: 204 100% 80%;
+    --sidebar-muted-foreground: 204 100% 95%;
+    --sidebar-accent: 204 100% 29%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 204 100% 44%;
+    --sidebar-ring: 217 91% 60%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-glass rounded-lg overflow-hidden;
+  }
+  
+  .glass-card-dark {
+    @apply bg-sage-darkGray/10 backdrop-blur-md border border-white/10 shadow-glass rounded-lg overflow-hidden;
+  }
+  
+  .animate-enter {
+    @apply opacity-0 transition-opacity duration-300 ease-out;
+  }
+  
+  .animate-enter-active {
+    @apply opacity-100;
+  }
+  
+  .animate-exit {
+    @apply opacity-100 transition-opacity duration-300 ease-in;
+  }
+  
+  .animate-exit-active {
+    @apply opacity-0;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-sage-lightGray rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-sage-blue/60 rounded-full transition-colors;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-sage-blue;
+  }
+
+  .page-transition-enter {
+    @apply opacity-0;
+  }
+  
+  .page-transition-enter-active {
+    @apply opacity-100 transition-opacity duration-300;
+  }
+  
+  .page-transition-exit {
+    @apply opacity-100;
+  }
+  
+  .page-transition-exit-active {
+    @apply opacity-0 transition-opacity duration-300;
+  }
+}
+
+@layer components {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    @apply w-2 h-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-sage-lightGray rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-sage-blue/60 rounded-full transition-colors hover:bg-sage-blue;
+  }
+
+  /* Glass effects */
+  .glass-card {
+    @apply bg-background/80 backdrop-blur-md border border-border/20 shadow-glass rounded-lg overflow-hidden;
+  }
+  
+  .glass-card-dark {
+    @apply bg-sage-darkGray/10 backdrop-blur-md border border-border/10 shadow-glass rounded-lg overflow-hidden;
+  }
+
+  /* Transitions */
+  .animate-enter {
+    @apply opacity-0 transition-opacity duration-300 ease-out;
+  }
+  
+  .animate-enter-active {
+    @apply opacity-100;
+  }
+  
+  .animate-exit {
+    @apply opacity-100 transition-opacity duration-300 ease-in;
+  }
+  
+  .animate-exit-active {
+    @apply opacity-0;
+  }
+
+  /* Page transitions */
+  .page-transition-enter {
+    @apply opacity-0;
+  }
+  
+  .page-transition-enter-active {
+    @apply opacity-100 transition-opacity duration-300;
+  }
+  
+  .page-transition-exit {
+    @apply opacity-100;
+  }
+  
+  .page-transition-exit-active {
+    @apply opacity-0 transition-opacity duration-300;
+  }
+
+  /* Sidebar specific styles */
+  .sidebar {
+    @apply bg-[hsl(var(--sidebar-background))] text-[hsl(var(--sidebar-foreground))];
+  }
+
+  .sidebar-button {
+    @apply bg-[hsl(var(--sidebar-background))] text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--sidebar-accent))];
+  }
+
+  /* Primary button styles - keep consistent blue */
+  .btn-primary {
+    @apply bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:bg-[hsl(var(--primary))/90];
+  }
+}
