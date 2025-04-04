@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import MainLayout from '@/components/layout/MainLayout';
@@ -48,7 +47,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-// Sample data for chart of accounts
 const accounts = [
   {
     id: 1,
@@ -223,7 +221,6 @@ const ChartOfAccounts = () => {
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   
-  // Filter accounts based on search term and category
   const filteredAccounts = accounts
     .filter(account => 
       account.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -234,7 +231,6 @@ const ChartOfAccounts = () => {
       selectedCategory ? account.category === selectedCategory : true
     );
   
-  // Group accounts by category
   const groupedAccounts: Record<string, typeof accounts> = {};
   filteredAccounts.forEach(account => {
     if (!groupedAccounts[account.category]) {
@@ -266,7 +262,6 @@ const ChartOfAccounts = () => {
         animate={{ opacity: 1, y: 0 }}
         className="space-y-6"
       >
-        {/* Back Button */}
         <div>
           <Button
             variant="ghost"
@@ -279,13 +274,11 @@ const ChartOfAccounts = () => {
           </Button>
         </div>
         
-        {/* Header */}
         <div className="bg-sage-blue rounded-lg p-6 shadow-lg">
           <h1 className="text-2xl font-semibold text-white mb-2">Chart of Accounts</h1>
           <p className="text-white/80">Manage your list of financial accounts and categories</p>
         </div>
         
-        {/* Filters and Actions */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-lg">List of Accounts</CardTitle>
@@ -308,7 +301,7 @@ const ChartOfAccounts = () => {
                     <SelectValue placeholder="All Categories" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Categories</SelectItem>
+                    <SelectItem value="all">All Categories</SelectItem>
                     <SelectItem value="Assets">Assets</SelectItem>
                     <SelectItem value="Liabilities">Liabilities</SelectItem>
                     <SelectItem value="Equity">Equity</SelectItem>
@@ -338,7 +331,6 @@ const ChartOfAccounts = () => {
               </div>
             </div>
             
-            {/* Batch Actions */}
             {selectedRows.length > 0 && (
               <div className="flex items-center gap-2 mb-4 p-2 bg-sage-lightGray rounded-md">
                 <CheckSquare size={16} className="text-sage-blue" />
@@ -353,7 +345,6 @@ const ChartOfAccounts = () => {
               </div>
             )}
             
-            {/* Accounts Table */}
             <div className="border rounded-md overflow-hidden">
               <Table>
                 <TableHeader>
@@ -377,14 +368,12 @@ const ChartOfAccounts = () => {
                 {Object.keys(groupedAccounts).map(category => (
                   <React.Fragment key={category}>
                     <TableBody>
-                      {/* Category Header */}
                       <TableRow className="bg-gray-50 hover:bg-gray-50">
                         <TableCell colSpan={8} className="font-medium">
                           {category} ({groupedAccounts[category].length})
                         </TableCell>
                       </TableRow>
                       
-                      {/* Accounts in this category */}
                       {groupedAccounts[category].map(account => (
                         <TableRow 
                           key={account.id}
