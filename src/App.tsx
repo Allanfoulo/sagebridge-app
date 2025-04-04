@@ -35,6 +35,10 @@ import CreateJournal from './pages/accounting/CreateJournal';
 import GeneralLedger from './pages/accounting/GeneralLedger';
 import TrialBalance from './pages/accounting/TrialBalance';
 import AddAccount from './pages/accounting/AddAccount';
+import Reconciliation from './pages/accounting/Reconciliation';
+import AdjustOpeningBalance from './pages/accounting/AdjustOpeningBalance';
+import TaxReports from './pages/accounting/TaxReports';
+import PeriodEnd from './pages/accounting/PeriodEnd';
 
 const queryClient = new QueryClient();
 
@@ -73,6 +77,10 @@ const App = () => (
               <Route path="/accounting/general-ledger" element={<GeneralLedger />} />
               <Route path="/accounting/trial-balance" element={<TrialBalance />} />
               <Route path="/accounting/add-account" element={<AddAccount />} />
+              <Route path="/accounting/reconciliation" element={<Reconciliation />} />
+              <Route path="/accounting/adjust-opening-balance" element={<AdjustOpeningBalance />} />
+              <Route path="/accounting/tax-reports" element={<TaxReports />} />
+              <Route path="/accounting/period-end" element={<PeriodEnd />} />
               
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

@@ -49,7 +49,7 @@ const AccountingModules = [
     title: "Financial Reports",
     description: "Access income statements, balance sheets and more",
     icon: BarChart4,
-    path: "/accounting/reports",
+    path: "/reports",
   },
   {
     title: "Period End",
