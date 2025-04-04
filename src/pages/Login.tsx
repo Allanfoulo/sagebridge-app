@@ -1,8 +1,11 @@
+
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { EyeIcon, EyeOffIcon } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { CheckCircle } from 'lucide-react';
 
 const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -11,6 +14,8 @@ const Login: React.FC = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const isMobile = useIsMobile();
+  const location = useLocation();
+  const successMessage = location.state?.message;
   
   const navigate = useNavigate();
   
@@ -58,6 +63,13 @@ const Login: React.FC = () => {
         className="mt-6 sm:mt-8 sm:mx-auto sm:w-full sm:max-w-md"
       >
         <div className="bg-white py-6 sm:py-8 px-4 shadow-card sm:rounded-lg sm:px-10">
+          {successMessage && (
+            <Alert className="mb-4 bg-green-50 border-green-100">
+              <CheckCircle className="h-4 w-4 text-green-500" />
+              <AlertDescription className="text-green-700">{successMessage}</AlertDescription>
+            </Alert>
+          )}
+          
           <form className="space-y-5 sm:space-y-6" onSubmit={handleLogin}>
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
@@ -186,6 +198,16 @@ const Login: React.FC = () => {
                 </a>
               </div>
             </div>
+          </div>
+          
+          {/* Sign Up Link */}
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-600">
+              Don't have an account?{" "}
+              <Link to="/signup" className="font-medium text-sage-blue hover:text-sage-darkBlue">
+                Sign up now
+              </Link>
+            </p>
           </div>
         </div>
       </motion.div>

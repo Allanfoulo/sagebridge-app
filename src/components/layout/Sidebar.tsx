@@ -54,7 +54,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
 
   return (
     <motion.aside
-      className="bg-[hsl(var(--sidebar-background))] h-screen z-20 border-r border-[hsl(var(--sidebar-border))] shadow-nav"
+      className="bg-[hsl(var(--sidebar-background))] h-screen z-20 border-r border-[hsl(var(--sidebar-border))] shadow-nav relative"
       variants={sidebarVariants}
       initial={collapsed ? 'collapsed' : 'expanded'}
       animate={collapsed ? 'collapsed' : 'expanded'}
@@ -79,7 +79,14 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
         )}
       </div>
       
-      <nav className="mt-6 px-2">
+      {/* Organization name */}
+      {!collapsed ? (
+        <div className="px-4 py-2 text-xs text-[hsl(var(--sidebar-foreground))]/70">
+          <span>Innovation Imperial Ltd</span>
+        </div>
+      ) : null}
+      
+      <nav className="mt-4 px-2 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 16rem)' }}>
         <ul className="space-y-1">
           {navigationItems.map((item) => {
             const isActive = location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
@@ -121,7 +128,8 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
         </ul>
       </nav>
       
-      <div className="absolute bottom-8 left-0 w-full px-2">
+      {/* Bottom actions fixed to bottom with proper spacing */}
+      <div className="absolute bottom-0 left-0 w-full px-2 py-4 border-t border-[hsl(var(--sidebar-border))]/20 bg-[hsl(var(--sidebar-background))]">
         <div className={cn(
           "space-y-1",
           collapsed ? "px-2" : "px-3"

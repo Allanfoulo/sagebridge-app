@@ -10,6 +10,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 // Page imports
 import Index from "./pages/Index";
 import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 import Sales from "./pages/Sales";
 import Purchases from "./pages/Purchases";
 import Banking from "./pages/Banking";
@@ -53,6 +54,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
               <Route path="/sales" element={<Sales />} />
               <Route path="/purchases" element={<Purchases />} />
               <Route path="/banking" element={<Banking />} />
