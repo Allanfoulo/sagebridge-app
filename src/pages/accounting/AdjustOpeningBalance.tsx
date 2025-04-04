@@ -117,7 +117,7 @@ const AdjustOpeningBalance = () => {
           <p className="text-white/80">Set or adjust the starting balances for your accounts</p>
         </div>
         
-        <Alert variant="warning" className="bg-amber-50">
+        <Alert className="bg-amber-50">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Important</AlertTitle>
           <AlertDescription>

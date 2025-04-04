@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import MainLayout from '@/components/layout/MainLayout';
@@ -193,7 +192,7 @@ const TaxReports = () => {
           </Card>
         </div>
         
-        <Alert variant="warning" className="bg-amber-50">
+        <Alert className="bg-amber-50">
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Important Tax Notice</AlertTitle>
           <AlertDescription>
@@ -300,7 +299,6 @@ const TaxReports = () => {
               <TabsContent value="pending">
                 <div className="border rounded-md overflow-hidden">
                   <Table>
-                    {/* Similar structure as above, but filtered for pending reports */}
                     <TableHeader>
                       <TableRow>
                         <TableHead>Report Name</TableHead>
@@ -347,7 +345,6 @@ const TaxReports = () => {
               <TabsContent value="submitted">
                 <div className="border rounded-md overflow-hidden">
                   <Table>
-                    {/* Similar structure as above, but filtered for submitted reports */}
                     <TableHeader>
                       <TableRow>
                         <TableHead>Report Name</TableHead>

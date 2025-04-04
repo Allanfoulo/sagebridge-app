@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import MainLayout from '@/components/layout/MainLayout';
@@ -169,11 +168,9 @@ const PeriodEnd = () => {
   const navigate = useNavigate();
   const [showDialog, setShowDialog] = useState(false);
   
-  // Calculate completion percentage for year-end checklist
   const completedTasks = yearEndChecklist.filter(task => task.completed).length;
   const completionPercentage = (completedTasks / yearEndChecklist.length) * 100;
   
-  // Calculate completion percentage for current month
   const currentMonth = periodStatuses.find(period => period.status === 'In Progress');
   const checklistValues = currentMonth ? Object.values(currentMonth.checklist) : [];
   const completedChecks = checklistValues.filter(value => value).length;
@@ -276,7 +273,7 @@ const PeriodEnd = () => {
                   </div>
                 </div>
                 
-                <Alert variant="warning" className="bg-amber-50">
+                <Alert className="bg-amber-50">
                   <AlertTriangle className="h-4 w-4" />
                   <AlertTitle>Action Required</AlertTitle>
                   <AlertDescription>
