@@ -261,7 +261,7 @@ const GeneralLedger = () => {
                     <SelectValue placeholder="All Accounts" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Accounts</SelectItem>
+                    <SelectItem value="all">All Accounts</SelectItem>
                     {uniqueAccounts.map(account => (
                       <SelectItem key={account} value={account}>{account}</SelectItem>
                     ))}
@@ -273,7 +273,7 @@ const GeneralLedger = () => {
                     <SelectValue placeholder="All Sources" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Sources</SelectItem>
+                    <SelectItem value="all">All Sources</SelectItem>
                     {uniqueSources.map(source => (
                       <SelectItem key={source} value={source}>{source}</SelectItem>
                     ))}
