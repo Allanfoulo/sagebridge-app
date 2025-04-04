@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -25,6 +26,15 @@ import UserAccess from './pages/administration/UserAccess';
 import ChangePassword from './pages/administration/ChangePassword';
 import MyAccount from './pages/administration/MyAccount';
 import AddCustomer from './pages/AddCustomer';
+
+// Accounting pages
+import Accounting from './pages/Accounting';
+import ChartOfAccounts from './pages/accounting/ChartOfAccounts';
+import Journals from './pages/accounting/Journals';
+import CreateJournal from './pages/accounting/CreateJournal';
+import GeneralLedger from './pages/accounting/GeneralLedger';
+import TrialBalance from './pages/accounting/TrialBalance';
+import AddAccount from './pages/accounting/AddAccount';
 
 const queryClient = new QueryClient();
 
@@ -54,6 +64,16 @@ const App = () => (
               <Route path="/administration/access" element={<UserAccess />} />
               <Route path="/administration/change-password" element={<ChangePassword />} />
               <Route path="/administration/my-account" element={<MyAccount />} />
+              
+              {/* Accounting Routes */}
+              <Route path="/accounting" element={<Accounting />} />
+              <Route path="/accounting/chart-of-accounts" element={<ChartOfAccounts />} />
+              <Route path="/accounting/journals" element={<Journals />} />
+              <Route path="/accounting/journals/new" element={<CreateJournal />} />
+              <Route path="/accounting/general-ledger" element={<GeneralLedger />} />
+              <Route path="/accounting/trial-balance" element={<TrialBalance />} />
+              <Route path="/accounting/add-account" element={<AddAccount />} />
+              
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

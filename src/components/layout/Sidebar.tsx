@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,7 +15,8 @@ import {
   HelpCircle,
   LogOut,
   Truck,
-  Shield
+  Shield,
+  BookOpen
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -38,6 +40,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
     { name: 'Customers', icon: Users, path: '/customers' },
     { name: 'Suppliers', icon: Truck, path: '/suppliers' },
     { name: 'Banking', icon: CreditCard, path: '/banking' },
+    { name: 'Accounting', icon: BookOpen, path: '/accounting' },
     { name: 'Reports', icon: PieChart, path: '/reports' },
     { name: 'Administration', icon: Shield, path: '/administration' },
     { name: 'Settings', icon: Settings, path: '/settings' },
@@ -79,7 +82,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
       <nav className="mt-6 px-2">
         <ul className="space-y-1">
           {navigationItems.map((item) => {
-            const isActive = location.pathname === item.path;
+            const isActive = location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
             
             return (
               <li key={item.name}>
