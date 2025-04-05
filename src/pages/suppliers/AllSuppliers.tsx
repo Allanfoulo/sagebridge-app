@@ -463,11 +463,17 @@ const AllSuppliers = () => {
             <Pagination>
               <PaginationContent>
                 <PaginationItem>
-                  <PaginationPrevious 
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
-                  />
+                  {/* Fixed here: Removed disabled prop and used conditional rendering instead */}
+                  {currentPage === 1 ? (
+                    <PaginationPrevious 
+                      className="pointer-events-none opacity-50"
+                      onClick={() => {}}
+                    />
+                  ) : (
+                    <PaginationPrevious 
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    />
+                  )}
                 </PaginationItem>
                 
                 {Array.from({ length: totalPages }).map((_, i) => (
@@ -482,11 +488,17 @@ const AllSuppliers = () => {
                 ))}
                 
                 <PaginationItem>
-                  <PaginationNext 
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
-                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
-                  />
+                  {/* Fixed here: Removed disabled prop and used conditional rendering instead */}
+                  {currentPage === totalPages ? (
+                    <PaginationNext 
+                      className="pointer-events-none opacity-50"
+                      onClick={() => {}}
+                    />
+                  ) : (
+                    <PaginationNext 
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    />
+                  )}
                 </PaginationItem>
               </PaginationContent>
             </Pagination>
