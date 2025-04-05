@@ -46,15 +46,19 @@ const CategoryDonutChart: React.FC<CategoryDonutChartProps> = ({ data }) => {
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip content={(props) => (
-                <ChartTooltipContent
-                  {...props}
-                  formatter={(value, name) => [
-                    `$${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (${((Number(value) / totalValue) * 100).toFixed(1)}%)`,
-                    name
-                  ]}
-                />
-              )} />
+              <Tooltip 
+                content={(props) => {
+                  return (
+                    <ChartTooltipContent
+                      {...props}
+                      formatter={(value, name) => [
+                        `$${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (${((Number(value) / totalValue) * 100).toFixed(1)}%)`,
+                        name
+                      ]}
+                    />
+                  );
+                }}
+              />
               <Legend 
                 content={<ChartLegendContent verticalAlign="middle" />}
                 layout="vertical"

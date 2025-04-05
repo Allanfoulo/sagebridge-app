@@ -46,15 +46,19 @@ const PayablesTrendChart: React.FC<PayablesTrendChartProps> = ({ data }) => {
             axisLine={false}
             tick={{ fontSize: 12, fill: '#6b7280' }}
           />
-          <Tooltip content={(props) => (
-            <ChartTooltipContent
-              {...props}
-              formatter={(value, name) => [
-                `$${Number(value).toLocaleString()}`,
-                name
-              ]}
-            />
-          )} />
+          <Tooltip 
+            content={(props) => {
+              return (
+                <ChartTooltipContent
+                  {...props}
+                  formatter={(value, name) => [
+                    `$${Number(value).toLocaleString()}`,
+                    name
+                  ]}
+                />
+              );
+            }}
+          />
           <Area 
             type="monotone" 
             dataKey="amount" 

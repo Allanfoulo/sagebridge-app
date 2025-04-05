@@ -51,15 +51,19 @@ const TopSupplierBalanceChart: React.FC<TopSupplierBalanceChartProps> = ({ suppl
             axisLine={false}
             tick={{ fontSize: 12 }}
           />
-          <Tooltip content={(props) => (
-            <ChartTooltipContent
-              {...props}
-              formatter={(value, name) => [
-                `$${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-                name
-              ]}
-            />
-          )} />
+          <Tooltip 
+            content={(props) => {
+              return (
+                <ChartTooltipContent
+                  {...props}
+                  formatter={(value, name) => [
+                    `$${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                    name
+                  ]}
+                />
+              );
+            }}
+          />
           <Bar dataKey="balance" radius={[0, 4, 4, 0]} barSize={20}>
             {chartData.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={getBarColor(entry.isOverdue)} />
