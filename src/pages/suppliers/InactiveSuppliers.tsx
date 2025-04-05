@@ -9,9 +9,10 @@ import SupplierFilters from '@/components/suppliers/SupplierFilters';
 import SupplierPagination from '@/components/suppliers/SupplierPagination';
 import SupplierBulkActions from '@/components/suppliers/SupplierBulkActions';
 import useSuppliers from '@/hooks/useSuppliers';
+import { Supplier } from '@/components/suppliers/SuppliersTable';
 
 // Mock data for inactive suppliers
-const supplierData = [
+const supplierData: Supplier[] = [
   {
     id: 'SP003',
     name: 'Global Shipping LLC',
@@ -19,7 +20,7 @@ const supplierData = [
     phone: '(555) 345-6789',
     email: 'michael@globalshipping.com',
     address: '789 Harbor Blvd, Port City, TX',
-    status: 'Inactive',
+    status: 'Inactive', // Now using the literal 'Inactive' type
     category: 'Logistics',
     balance: 8200.75,
     inactiveDate: '2024-01-15',

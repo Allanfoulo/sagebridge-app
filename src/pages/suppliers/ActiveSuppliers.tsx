@@ -10,9 +10,10 @@ import SupplierFilters from '@/components/suppliers/SupplierFilters';
 import SupplierPagination from '@/components/suppliers/SupplierPagination';
 import SupplierBulkActions from '@/components/suppliers/SupplierBulkActions';
 import useSuppliers from '@/hooks/useSuppliers';
+import { Supplier } from '@/components/suppliers/SuppliersTable';
 
 // Mock data for suppliers - filtered for active suppliers only
-const supplierData = [
+const supplierData: Supplier[] = [
   {
     id: 'SP001',
     name: 'Tech Solutions Inc.',
@@ -20,7 +21,7 @@ const supplierData = [
     phone: '(555) 123-4567',
     email: 'john@techsolutions.com',
     address: '123 Tech Lane, Silicon Valley, CA',
-    status: 'Active',
+    status: 'Active', // Now using the literal 'Active' type
     category: 'Technology',
     balance: 12500.00
   },
