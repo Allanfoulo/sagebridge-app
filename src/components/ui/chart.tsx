@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import * as RechartsPrimitive from "recharts"
 
@@ -98,7 +99,14 @@ ${colorConfig
   )
 }
 
-const ChartTooltip = RechartsPrimitive.Tooltip
+// Use custom type to work around the Recharts tooltip content type issues
+type CustomTooltipContentProps = React.ComponentProps<typeof RechartsPrimitive.Tooltip> & {
+  content?: React.ReactNode | ((props: any) => React.ReactNode);
+};
+
+const ChartTooltip = (props: CustomTooltipContentProps) => {
+  return <RechartsPrimitive.Tooltip {...props} />
+}
 
 const ChartTooltipContent = React.forwardRef<
   HTMLDivElement,
@@ -186,7 +194,7 @@ const ChartTooltipContent = React.forwardRef<
           {payload.map((item, index) => {
             const key = `${nameKey || item.name || item.dataKey || "value"}`
             const itemConfig = getPayloadConfigFromPayload(config, item, key)
-            const indicatorColor = color || item.payload.fill || item.color
+            const indicatorColor = color || item.payload?.fill || item.color
 
             return (
               <div

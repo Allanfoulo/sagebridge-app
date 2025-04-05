@@ -105,11 +105,41 @@ const Suppliers = () => {
             </AccordionTrigger>
             <AccordionContent className="px-4 pb-4">
               <nav className="space-y-2">
-                <Button variant="ghost" className="w-full justify-start hover:bg-sage-blue/10 hover:text-sage-blue">Purchase Orders</Button>
-                <Button variant="ghost" className="w-full justify-start hover:bg-sage-blue/10 hover:text-sage-blue">Invoices</Button>
-                <Button variant="ghost" className="w-full justify-start hover:bg-sage-blue/10 hover:text-sage-blue">Payments</Button>
-                <Button variant="ghost" className="w-full justify-start hover:bg-sage-blue/10 hover:text-sage-blue">Credit Notes</Button>
-                <Button variant="ghost" className="w-full justify-start hover:bg-sage-blue/10 hover:text-sage-blue">Statement Reconciliation</Button>
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start hover:bg-sage-blue/10 hover:text-sage-blue"
+                  onClick={() => navigate('/suppliers/transactions/purchase-orders')}
+                >
+                  Purchase Orders
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start hover:bg-sage-blue/10 hover:text-sage-blue"
+                  onClick={() => navigate('/suppliers/transactions/invoices')}
+                >
+                  Invoices
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start hover:bg-sage-blue/10 hover:text-sage-blue"
+                  onClick={() => navigate('/suppliers/transactions/payments')}
+                >
+                  Payments
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start hover:bg-sage-blue/10 hover:text-sage-blue"
+                  onClick={() => navigate('/suppliers/transactions/credit-notes')}
+                >
+                  Credit Notes
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start hover:bg-sage-blue/10 hover:text-sage-blue"
+                  onClick={() => navigate('/suppliers/transactions/statement-reconciliation')}
+                >
+                  Statement Reconciliation
+                </Button>
               </nav>
             </AccordionContent>
           </AccordionItem>

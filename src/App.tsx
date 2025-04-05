@@ -50,6 +50,13 @@ import SuppliersByCategory from './pages/suppliers/SuppliersByCategory';
 // Supplier Report pages
 import SupplierBalances from './pages/suppliers/reports/SupplierBalances';
 
+// Supplier Transaction pages
+import PurchaseOrders from './pages/suppliers/transactions/PurchaseOrders';
+import Invoices from './pages/suppliers/transactions/Invoices';
+import Payments from './pages/suppliers/transactions/Payments';
+import CreditNotes from './pages/suppliers/transactions/CreditNotes';
+import StatementReconciliation from './pages/suppliers/transactions/StatementReconciliation';
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -76,6 +83,13 @@ const App = () => (
               <Route path="/suppliers/active" element={<ActiveSuppliers />} />
               <Route path="/suppliers/inactive" element={<InactiveSuppliers />} />
               <Route path="/suppliers/by-category" element={<SuppliersByCategory />} />
+              
+              {/* Supplier Transaction Routes */}
+              <Route path="/suppliers/transactions/purchase-orders" element={<PurchaseOrders />} />
+              <Route path="/suppliers/transactions/invoices" element={<Invoices />} />
+              <Route path="/suppliers/transactions/payments" element={<Payments />} />
+              <Route path="/suppliers/transactions/credit-notes" element={<CreditNotes />} />
+              <Route path="/suppliers/transactions/statement-reconciliation" element={<StatementReconciliation />} />
               
               {/* Supplier Reports Routes */}
               <Route path="/suppliers/reports/balances" element={<SupplierBalances />} />
