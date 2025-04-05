@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
@@ -25,6 +26,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const supplierFormSchema = z.object({
   companyName: z.string().min(2, 'Company name must be at least 2 characters'),
@@ -42,6 +45,9 @@ type SupplierFormValues = z.infer<typeof supplierFormSchema>;
 
 const AddSupplier = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  
   const form = useForm<SupplierFormValues>({
     resolver: zodResolver(supplierFormSchema),
     defaultValues: {
@@ -57,9 +63,51 @@ const AddSupplier = () => {
     },
   });
 
-  const onSubmit = (data: SupplierFormValues) => {
-    console.log(data);
-    // TODO: Implement supplier creation logic
+  const onSubmit = async (data: SupplierFormValues) => {
+    try {
+      setIsSubmitting(true);
+      
+      // Prepare data for insertion
+      const supplierData = {
+        name: data.companyName,
+        email: data.email,
+        phone: data.phone,
+        address: data.address,
+        tax_id: data.taxId || null,
+        payment_terms: data.paymentTerms,
+        notes: data.notes || null,
+        category_id: data.category !== 'other' ? data.category : null,
+        is_active: true
+      };
+      
+      // Insert data into the suppliers table
+      const { data: newSupplier, error } = await supabase
+        .from('suppliers')
+        .insert(supplierData)
+        .select()
+        .single();
+      
+      if (error) {
+        throw error;
+      }
+      
+      toast({
+        title: "Supplier Added",
+        description: `${data.companyName} has been added successfully`,
+      });
+      
+      // Navigate back to suppliers page
+      navigate('/suppliers');
+    } catch (error: any) {
+      console.error('Error adding supplier:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Could not add supplier. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -278,8 +326,9 @@ const AddSupplier = () => {
                 <Button 
                   type="submit" 
                   className="bg-sage-blue hover:bg-sage-blue/90 text-white shadow-md"
+                  disabled={isSubmitting}
                 >
-                  Save Supplier
+                  {isSubmitting ? 'Saving...' : 'Save Supplier'}
                 </Button>
               </div>
             </form>
@@ -290,4 +339,4 @@ const AddSupplier = () => {
   );
 };
 
-export default AddSupplier; 
+export default AddSupplier;

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Copy, Map } from 'lucide-react';
@@ -8,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
@@ -33,18 +34,19 @@ import {
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { CalendarIcon } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const customerSchema = z.object({
   customerName: z.string().min(2, 'Customer name must be at least 2 characters'),
   category: z.string(),
   isCashSale: z.boolean(),
   openingBalance: z.string(),
-  openingBalanceDate: z.date(),
+  openingBalanceDate: z.date().optional(),
   autoAllocateReceipts: z.boolean(),
   isActive: z.boolean(),
   creditLimit: z.string(),
-  vatNumber: z.string(),
-  salesRep: z.string(),
+  vatNumber: z.string().optional(),
+  salesRep: z.string().optional(),
   acceptsElectronicInvoices: z.boolean(),
   postalAddress: z.object({
     line1: z.string(),
@@ -71,10 +73,10 @@ const customerSchema = z.object({
     canViewInvoicesOnline: z.boolean(),
   }),
   defaultSettings: z.object({
-    statementDistribution: z.string(),
+    statementDistribution: z.string().optional(),
     defaultDiscount: z.string(),
-    defaultPriceList: z.string(),
-    paymentDueDays: z.string(),
+    defaultPriceList: z.string().optional(),
+    paymentDueDays: z.string().optional(),
     paymentDueType: z.string(),
   }),
 });
@@ -85,6 +87,7 @@ const AddCustomer = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [date, setDate] = React.useState<Date>();
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const {
     register,
@@ -108,6 +111,13 @@ const AddCustomer = () => {
     },
   });
 
+  // Set opening balance date when date changes
+  React.useEffect(() => {
+    if (date) {
+      setValue('openingBalanceDate', date);
+    }
+  }, [date, setValue]);
+
   const copyPostalToDelivery = () => {
     const postalAddress = watch('postalAddress');
     setValue('deliveryAddress.line1', postalAddress.line1);
@@ -119,8 +129,47 @@ const AddCustomer = () => {
 
   const onSubmit = async (data: CustomerFormData) => {
     try {
-      // TODO: Implement customer creation logic
-      console.log('Form data:', data);
+      setIsSubmitting(true);
+
+      // Parse the credit limit to remove currency symbols and convert to a number
+      let creditLimit = 0;
+      try {
+        creditLimit = parseFloat(data.creditLimit.replace(/[^\d.-]/g, ''));
+      } catch (error) {
+        console.error('Error parsing credit limit:', error);
+      }
+
+      // Prepare customer data for the database
+      const customerData = {
+        name: data.customerName,
+        email: data.contactDetails.email,
+        phone: data.contactDetails.telephone,
+        address: data.postalAddress.line1 + 
+                (data.postalAddress.line2 ? ', ' + data.postalAddress.line2 : '') +
+                (data.postalAddress.line3 ? ', ' + data.postalAddress.line3 : '') + 
+                (data.postalAddress.line4 ? ', ' + data.postalAddress.line4 : ''),
+        city: data.postalAddress.line3 || null,
+        state: data.postalAddress.line2 || null,
+        zip_code: data.postalAddress.postalCode,
+        country: data.postalAddress.line4 || null,
+        tax_id: data.vatNumber || null,
+        category_id: data.category !== 'none' ? data.category : null,
+        notes: `Contact: ${data.contactDetails.contactName}, Mobile: ${data.contactDetails.mobile}`,
+        website: data.contactDetails.webAddress || null,
+        is_active: data.isActive,
+        credit_limit: creditLimit
+      };
+
+      // Insert data into the customers table
+      const { data: newCustomer, error } = await supabase
+        .from('customers')
+        .insert(customerData)
+        .select()
+        .single();
+      
+      if (error) {
+        throw error;
+      }
       
       toast({
         title: 'Success',
@@ -129,12 +178,15 @@ const AddCustomer = () => {
       });
       
       navigate('/customers');
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Error creating customer:', error);
       toast({
         title: 'Error',
-        description: 'Failed to create customer. Please try again.',
+        description: error.message || 'Failed to create customer. Please try again.',
         variant: 'destructive',
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -501,8 +553,12 @@ const AddCustomer = () => {
                 >
                   Cancel
                 </Button>
-                <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-                  Create Customer
+                <Button 
+                  type="submit" 
+                  className="bg-blue-600 hover:bg-blue-700"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Creating...' : 'Create Customer'}
                 </Button>
               </div>
             </form>
@@ -513,4 +569,4 @@ const AddCustomer = () => {
   );
 };
 
-export default AddCustomer; 
+export default AddCustomer;
