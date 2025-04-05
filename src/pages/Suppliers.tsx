@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Plus, FileText, ShoppingBag, PieChart, Settings, ArrowLeft } from 'lucide-react';
@@ -62,7 +63,13 @@ const Suppliers = () => {
             </AccordionTrigger>
             <AccordionContent className="px-4 pb-4">
               <nav className="space-y-2">
-                <Button variant="ghost" className="w-full justify-start hover:bg-sage-blue/10 hover:text-sage-blue">All Suppliers</Button>
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start hover:bg-sage-blue/10 hover:text-sage-blue"
+                  onClick={() => navigate('/suppliers/all')}
+                >
+                  All Suppliers
+                </Button>
                 <Button variant="ghost" className="w-full justify-start hover:bg-sage-blue/10 hover:text-sage-blue">Active Suppliers</Button>
                 <Button variant="ghost" className="w-full justify-start hover:bg-sage-blue/10 hover:text-sage-blue">Inactive Suppliers</Button>
                 <Button variant="ghost" className="w-full justify-start hover:bg-sage-blue/10 hover:text-sage-blue">By Category</Button>

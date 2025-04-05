@@ -41,6 +41,9 @@ import AdjustOpeningBalance from './pages/accounting/AdjustOpeningBalance';
 import TaxReports from './pages/accounting/TaxReports';
 import PeriodEnd from './pages/accounting/PeriodEnd';
 
+// Supplier pages
+import AllSuppliers from './pages/suppliers/AllSuppliers';
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -63,6 +66,7 @@ const App = () => (
               <Route path="/customers/add" element={<AddCustomer />} />
               <Route path="/suppliers" element={<Suppliers />} />
               <Route path="/suppliers/add" element={<AddSupplier />} />
+              <Route path="/suppliers/all" element={<AllSuppliers />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/administration" element={<Administration />} />
               <Route path="/administration/users" element={<ManageUsers />} />
