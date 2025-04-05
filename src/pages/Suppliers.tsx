@@ -70,9 +70,27 @@ const Suppliers = () => {
                 >
                   All Suppliers
                 </Button>
-                <Button variant="ghost" className="w-full justify-start hover:bg-sage-blue/10 hover:text-sage-blue">Active Suppliers</Button>
-                <Button variant="ghost" className="w-full justify-start hover:bg-sage-blue/10 hover:text-sage-blue">Inactive Suppliers</Button>
-                <Button variant="ghost" className="w-full justify-start hover:bg-sage-blue/10 hover:text-sage-blue">By Category</Button>
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start hover:bg-sage-blue/10 hover:text-sage-blue"
+                  onClick={() => navigate('/suppliers/active')}
+                >
+                  Active Suppliers
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start hover:bg-sage-blue/10 hover:text-sage-blue"
+                  onClick={() => navigate('/suppliers/inactive')}
+                >
+                  Inactive Suppliers
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start hover:bg-sage-blue/10 hover:text-sage-blue"
+                  onClick={() => navigate('/suppliers/by-category')}
+                >
+                  By Category
+                </Button>
               </nav>
             </AccordionContent>
           </AccordionItem>
@@ -136,4 +154,4 @@ const Suppliers = () => {
   );
 };
 
-export default Suppliers; 
+export default Suppliers;

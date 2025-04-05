@@ -43,6 +43,9 @@ import PeriodEnd from './pages/accounting/PeriodEnd';
 
 // Supplier pages
 import AllSuppliers from './pages/suppliers/AllSuppliers';
+import ActiveSuppliers from './pages/suppliers/ActiveSuppliers';
+import InactiveSuppliers from './pages/suppliers/InactiveSuppliers';
+import SuppliersByCategory from './pages/suppliers/SuppliersByCategory';
 
 const queryClient = new QueryClient();
 
@@ -67,6 +70,9 @@ const App = () => (
               <Route path="/suppliers" element={<Suppliers />} />
               <Route path="/suppliers/add" element={<AddSupplier />} />
               <Route path="/suppliers/all" element={<AllSuppliers />} />
+              <Route path="/suppliers/active" element={<ActiveSuppliers />} />
+              <Route path="/suppliers/inactive" element={<InactiveSuppliers />} />
+              <Route path="/suppliers/by-category" element={<SuppliersByCategory />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/administration" element={<Administration />} />
               <Route path="/administration/users" element={<ManageUsers />} />
