@@ -213,32 +213,6 @@ const AllSuppliers = () => {
     );
   };
 
-  // Sort suppliers
-  const sortedSuppliers = [...filteredSuppliers].sort((a, b) => {
-    if (sortConfig.direction === null) {
-      return 0;
-    }
-    
-    const aValue = a[sortConfig.key as keyof typeof a];
-    const bValue = b[sortConfig.key as keyof typeof b];
-    
-    if (aValue < bValue) {
-      return sortConfig.direction === 'ascending' ? -1 : 1;
-    }
-    if (aValue > bValue) {
-      return sortConfig.direction === 'ascending' ? 1 : -1;
-    }
-    return 0;
-  });
-
-  // Pagination
-  const itemsPerPage = 5;
-  const totalPages = Math.ceil(sortedSuppliers.length / itemsPerPage);
-  const paginatedSuppliers = sortedSuppliers.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
   // Render status badge
   const renderStatus = (status: string) => {
     if (status === 'Active') {
