@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 
 interface PayablesTrendData {
   month: string;
@@ -13,6 +13,23 @@ interface PayablesTrendChartProps {
 }
 
 const PayablesTrendChart: React.FC<PayablesTrendChartProps> = ({ data }) => {
+  // Create a custom tooltip component
+  const CustomTooltip = (props: any) => {
+    if (!props.active || !props.payload || props.payload.length === 0) {
+      return null;
+    }
+    
+    return (
+      <ChartTooltipContent
+        {...props}
+        formatter={(value, name) => [
+          `$${Number(value).toLocaleString()}`,
+          name
+        ]}
+      />
+    );
+  };
+
   return (
     <ChartContainer 
       config={{
@@ -46,19 +63,7 @@ const PayablesTrendChart: React.FC<PayablesTrendChartProps> = ({ data }) => {
             axisLine={false}
             tick={{ fontSize: 12, fill: '#6b7280' }}
           />
-          <Tooltip 
-            content={(props) => {
-              return (
-                <ChartTooltipContent
-                  {...props}
-                  formatter={(value, name) => [
-                    `$${Number(value).toLocaleString()}`,
-                    name
-                  ]}
-                />
-              );
-            }}
-          />
+          <Tooltip content={<CustomTooltip />} />
           <Area 
             type="monotone" 
             dataKey="amount" 

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 
 interface Supplier {
   id: string;
@@ -25,6 +25,23 @@ const TopSupplierBalanceChart: React.FC<TopSupplierBalanceChartProps> = ({ suppl
   // Colors for the bars based on overdue status
   const getBarColor = (isOverdue: boolean) => isOverdue ? "#ef4444" : "#3b82f6";
   
+  // Create a custom tooltip component
+  const CustomTooltip = (props: any) => {
+    if (!props.active || !props.payload || props.payload.length === 0) {
+      return null;
+    }
+    
+    return (
+      <ChartTooltipContent
+        {...props}
+        formatter={(value, name) => [
+          `$${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          name
+        ]}
+      />
+    );
+  };
+
   return (
     <ChartContainer 
       config={{
@@ -51,19 +68,7 @@ const TopSupplierBalanceChart: React.FC<TopSupplierBalanceChartProps> = ({ suppl
             axisLine={false}
             tick={{ fontSize: 12 }}
           />
-          <Tooltip 
-            content={(props) => {
-              return (
-                <ChartTooltipContent
-                  {...props}
-                  formatter={(value, name) => [
-                    `$${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-                    name
-                  ]}
-                />
-              );
-            }}
-          />
+          <Tooltip content={<CustomTooltip />} />
           <Bar dataKey="balance" radius={[0, 4, 4, 0]} barSize={20}>
             {chartData.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={getBarColor(entry.isOverdue)} />

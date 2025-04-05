@@ -23,6 +23,23 @@ const CategoryDonutChart: React.FC<CategoryDonutChartProps> = ({ data }) => {
 
   const totalValue = data.reduce((sum, { value }) => sum + value, 0);
 
+  // Create a custom tooltip component
+  const CustomTooltip = (props: any) => {
+    if (!props.active || !props.payload || props.payload.length === 0) {
+      return null;
+    }
+    
+    return (
+      <ChartTooltipContent
+        {...props}
+        formatter={(value, name) => [
+          `$${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (${((Number(value) / totalValue) * 100).toFixed(1)}%)`,
+          name
+        ]}
+      />
+    );
+  };
+
   return (
     <ChartContainer config={chartConfig}>
       <div className="grid grid-cols-1 lg:grid-cols-5 h-full">
@@ -46,19 +63,7 @@ const CategoryDonutChart: React.FC<CategoryDonutChartProps> = ({ data }) => {
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip 
-                content={(props) => {
-                  return (
-                    <ChartTooltipContent
-                      {...props}
-                      formatter={(value, name) => [
-                        `$${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (${((Number(value) / totalValue) * 100).toFixed(1)}%)`,
-                        name
-                      ]}
-                    />
-                  );
-                }}
-              />
+              <Tooltip content={<CustomTooltip />} />
               <Legend 
                 content={<ChartLegendContent verticalAlign="middle" />}
                 layout="vertical"
