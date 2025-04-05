@@ -3,14 +3,15 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { AuthProvider } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 // Page imports
 import Index from "./pages/Index";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
+import Auth from "./pages/Auth";
 import Sales from "./pages/Sales";
 import Purchases from "./pages/Purchases";
 import Banking from "./pages/Banking";
@@ -62,65 +63,69 @@ const queryClient = new QueryClient();
 const App = () => (
   <ThemeProvider>
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AnimatePresence mode="wait">
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              <Route path="/sales" element={<Sales />} />
-              <Route path="/purchases" element={<Purchases />} />
-              <Route path="/banking" element={<Banking />} />
-              <Route path="/reports" element={<Reports />} />
-              <Route path="/customers" element={<Customers />} />
-              <Route path="/customers/add" element={<AddCustomer />} />
-              <Route path="/suppliers" element={<Suppliers />} />
-              <Route path="/suppliers/add" element={<AddSupplier />} />
-              <Route path="/suppliers/all" element={<AllSuppliers />} />
-              <Route path="/suppliers/active" element={<ActiveSuppliers />} />
-              <Route path="/suppliers/inactive" element={<InactiveSuppliers />} />
-              <Route path="/suppliers/by-category" element={<SuppliersByCategory />} />
-              
-              {/* Supplier Transaction Routes */}
-              <Route path="/suppliers/transactions/purchase-orders" element={<PurchaseOrders />} />
-              <Route path="/suppliers/transactions/invoices" element={<Invoices />} />
-              <Route path="/suppliers/transactions/payments" element={<Payments />} />
-              <Route path="/suppliers/transactions/credit-notes" element={<CreditNotes />} />
-              <Route path="/suppliers/transactions/statement-reconciliation" element={<StatementReconciliation />} />
-              
-              {/* Supplier Reports Routes */}
-              <Route path="/suppliers/reports/balances" element={<SupplierBalances />} />
-              
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/administration" element={<Administration />} />
-              <Route path="/administration/users" element={<ManageUsers />} />
-              <Route path="/administration/users/add" element={<AddUser />} />
-              <Route path="/administration/access" element={<UserAccess />} />
-              <Route path="/administration/change-password" element={<ChangePassword />} />
-              <Route path="/administration/my-account" element={<MyAccount />} />
-              
-              {/* Accounting Routes */}
-              <Route path="/accounting" element={<Accounting />} />
-              <Route path="/accounting/chart-of-accounts" element={<ChartOfAccounts />} />
-              <Route path="/accounting/journals" element={<Journals />} />
-              <Route path="/accounting/journals/new" element={<CreateJournal />} />
-              <Route path="/accounting/general-ledger" element={<GeneralLedger />} />
-              <Route path="/accounting/trial-balance" element={<TrialBalance />} />
-              <Route path="/accounting/add-account" element={<AddAccount />} />
-              <Route path="/accounting/reconciliation" element={<Reconciliation />} />
-              <Route path="/accounting/adjust-opening-balance" element={<AdjustOpeningBalance />} />
-              <Route path="/accounting/tax-reports" element={<TaxReports />} />
-              <Route path="/accounting/period-end" element={<PeriodEnd />} />
-              
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </AnimatePresence>
-        </BrowserRouter>
-      </TooltipProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AnimatePresence mode="wait">
+              <Routes>
+                {/* Public routes */}
+                <Route path="/auth" element={<Auth />} />
+                
+                {/* Protected routes */}
+                <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+                <Route path="/sales" element={<ProtectedRoute><Sales /></ProtectedRoute>} />
+                <Route path="/purchases" element={<ProtectedRoute><Purchases /></ProtectedRoute>} />
+                <Route path="/banking" element={<ProtectedRoute><Banking /></ProtectedRoute>} />
+                <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+                <Route path="/customers" element={<ProtectedRoute><Customers /></ProtectedRoute>} />
+                <Route path="/customers/add" element={<ProtectedRoute><AddCustomer /></ProtectedRoute>} />
+                <Route path="/suppliers" element={<ProtectedRoute><Suppliers /></ProtectedRoute>} />
+                <Route path="/suppliers/add" element={<ProtectedRoute><AddSupplier /></ProtectedRoute>} />
+                <Route path="/suppliers/all" element={<ProtectedRoute><AllSuppliers /></ProtectedRoute>} />
+                <Route path="/suppliers/active" element={<ProtectedRoute><ActiveSuppliers /></ProtectedRoute>} />
+                <Route path="/suppliers/inactive" element={<ProtectedRoute><InactiveSuppliers /></ProtectedRoute>} />
+                <Route path="/suppliers/by-category" element={<ProtectedRoute><SuppliersByCategory /></ProtectedRoute>} />
+                
+                {/* Supplier Transaction Routes */}
+                <Route path="/suppliers/transactions/purchase-orders" element={<ProtectedRoute><PurchaseOrders /></ProtectedRoute>} />
+                <Route path="/suppliers/transactions/invoices" element={<ProtectedRoute><Invoices /></ProtectedRoute>} />
+                <Route path="/suppliers/transactions/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
+                <Route path="/suppliers/transactions/credit-notes" element={<ProtectedRoute><CreditNotes /></ProtectedRoute>} />
+                <Route path="/suppliers/transactions/statement-reconciliation" element={<ProtectedRoute><StatementReconciliation /></ProtectedRoute>} />
+                
+                {/* Supplier Reports Routes */}
+                <Route path="/suppliers/reports/balances" element={<ProtectedRoute><SupplierBalances /></ProtectedRoute>} />
+                
+                <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+                <Route path="/administration" element={<ProtectedRoute><Administration /></ProtectedRoute>} />
+                <Route path="/administration/users" element={<ProtectedRoute><ManageUsers /></ProtectedRoute>} />
+                <Route path="/administration/users/add" element={<ProtectedRoute><AddUser /></ProtectedRoute>} />
+                <Route path="/administration/access" element={<ProtectedRoute><UserAccess /></ProtectedRoute>} />
+                <Route path="/administration/change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
+                <Route path="/administration/my-account" element={<ProtectedRoute><MyAccount /></ProtectedRoute>} />
+                
+                {/* Accounting Routes */}
+                <Route path="/accounting" element={<ProtectedRoute><Accounting /></ProtectedRoute>} />
+                <Route path="/accounting/chart-of-accounts" element={<ProtectedRoute><ChartOfAccounts /></ProtectedRoute>} />
+                <Route path="/accounting/journals" element={<ProtectedRoute><Journals /></ProtectedRoute>} />
+                <Route path="/accounting/journals/new" element={<ProtectedRoute><CreateJournal /></ProtectedRoute>} />
+                <Route path="/accounting/general-ledger" element={<ProtectedRoute><GeneralLedger /></ProtectedRoute>} />
+                <Route path="/accounting/trial-balance" element={<ProtectedRoute><TrialBalance /></ProtectedRoute>} />
+                <Route path="/accounting/add-account" element={<ProtectedRoute><AddAccount /></ProtectedRoute>} />
+                <Route path="/accounting/reconciliation" element={<ProtectedRoute><Reconciliation /></ProtectedRoute>} />
+                <Route path="/accounting/adjust-opening-balance" element={<ProtectedRoute><AdjustOpeningBalance /></ProtectedRoute>} />
+                <Route path="/accounting/tax-reports" element={<ProtectedRoute><TaxReports /></ProtectedRoute>} />
+                <Route path="/accounting/period-end" element={<ProtectedRoute><PeriodEnd /></ProtectedRoute>} />
+                
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </AnimatePresence>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
     </QueryClientProvider>
   </ThemeProvider>
 );
