@@ -105,7 +105,7 @@ const UserAccess = () => {
         for (const role of rolesData) {
           const { data: rolePermData, error: rolePermError } = await supabase
             .from('role_permissions')
-            .select('permission_id, permissions:permission_id(id, module, action)')
+            .select('permission_id, permissions!permission_id(id, module, action)')
             .eq('role_id', role.id);
           
           if (rolePermError) {

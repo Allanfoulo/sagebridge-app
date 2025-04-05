@@ -48,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .from('user_role_assignments')
         .select(`
           role_id,
-          user_roles:role_id (
+          roles:user_roles!role_id(
             id,
             name,
             description
@@ -62,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       // Extract role objects and set them
-      const roles = rolesData.map(item => item.user_roles) as UserRole[];
+      const roles = rolesData.map(item => item.roles) as UserRole[];
       setUserRoles(roles);
 
       // Get role IDs for permission lookup
@@ -74,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .from('role_permissions')
         .select(`
           permission_id,
-          permissions:permission_id (
+          perms:permissions!permission_id(
             id,
             module,
             action,
@@ -89,7 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       // Extract permission objects and set them
-      const permissions = permissionsData.map(item => item.permissions) as UserPermission[];
+      const permissions = permissionsData.map(item => item.perms) as UserPermission[];
       setUserPermissions(permissions);
     } catch (error) {
       console.error('Error in fetchUserRolesAndPermissions:', error);
