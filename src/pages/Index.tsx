@@ -1,12 +1,25 @@
-import React from 'react';
+
+import React, { useEffect } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import FinancialOverview from '@/components/dashboard/FinancialOverview';
 import RecentTransactions from '@/components/dashboard/RecentTransactions';
 import UpcomingPayments from '@/components/dashboard/UpcomingPayments';
 import PerformanceChart from '@/components/dashboard/PerformanceChart';
+import SystemStatus from '@/components/diagnostics/SystemStatus';
 import { motion } from 'framer-motion';
+import { useToast } from '@/hooks/use-toast';
 
 const Index: React.FC = () => {
+  const { toast } = useToast();
+
+  useEffect(() => {
+    // Check if the app is working properly on initial load
+    toast({
+      title: "Application Loaded",
+      description: "The dashboard has been loaded successfully.",
+    });
+  }, [toast]);
+
   return (
     <MainLayout>
       <motion.div 
@@ -49,7 +62,10 @@ const Index: React.FC = () => {
             <div className="md:col-span-2">
               <RecentTransactions />
             </div>
-            <div>
+            <div className="space-y-5">
+              {/* System Status diagnostic component */}
+              <SystemStatus />
+              
               <div className="bg-primary-100 p-5 rounded-lg border border-primary-200 h-full">
                 <h3 className="font-semibold text-lg text-primary-800">Quick Actions</h3>
                 <div className="space-y-3 mt-4">
