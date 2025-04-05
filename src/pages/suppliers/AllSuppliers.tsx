@@ -135,8 +135,8 @@ const supplierData = [
 const AllSuppliers = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedStatus, setSelectedStatus] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedSuppliers, setSelectedSuppliers] = useState<string[]>([]);
   const [sortConfig, setSortConfig] = useState<{
@@ -151,8 +151,8 @@ const AllSuppliers = () => {
         String(value).toLowerCase().includes(searchTerm.toLowerCase())
       );
     
-    const matchesCategory = selectedCategory === '' || supplier.category === selectedCategory;
-    const matchesStatus = selectedStatus === '' || supplier.status === selectedStatus;
+    const matchesCategory = selectedCategory === 'all' || supplier.category === selectedCategory;
+    const matchesStatus = selectedStatus === 'all' || supplier.status === selectedStatus;
     
     return matchesSearch && matchesCategory && matchesStatus;
   });
@@ -212,6 +212,32 @@ const AllSuppliers = () => {
         : [...prev, id]
     );
   };
+
+  // Sort suppliers
+  const sortedSuppliers = [...filteredSuppliers].sort((a, b) => {
+    if (sortConfig.direction === null) {
+      return 0;
+    }
+    
+    const aValue = a[sortConfig.key as keyof typeof a];
+    const bValue = b[sortConfig.key as keyof typeof b];
+    
+    if (aValue < bValue) {
+      return sortConfig.direction === 'ascending' ? -1 : 1;
+    }
+    if (aValue > bValue) {
+      return sortConfig.direction === 'ascending' ? 1 : -1;
+    }
+    return 0;
+  });
+
+  // Pagination
+  const itemsPerPage = 5;
+  const totalPages = Math.ceil(sortedSuppliers.length / itemsPerPage);
+  const paginatedSuppliers = sortedSuppliers.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   // Render status badge
   const renderStatus = (status: string) => {
@@ -285,7 +311,7 @@ const AllSuppliers = () => {
                 <SelectValue placeholder="Filter by Category" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Categories</SelectItem>
+                <SelectItem value="all">All Categories</SelectItem>
                 <SelectItem value="Technology">Technology</SelectItem>
                 <SelectItem value="Office Supplies">Office Supplies</SelectItem>
                 <SelectItem value="Logistics">Logistics</SelectItem>
@@ -304,7 +330,7 @@ const AllSuppliers = () => {
                 <SelectValue placeholder="Filter by Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Statuses</SelectItem>
+                <SelectItem value="all">All Statuses</SelectItem>
                 <SelectItem value="Active">Active</SelectItem>
                 <SelectItem value="Inactive">Inactive</SelectItem>
               </SelectContent>
@@ -463,7 +489,6 @@ const AllSuppliers = () => {
             <Pagination>
               <PaginationContent>
                 <PaginationItem>
-                  {/* Fixed here: Removed disabled prop and used conditional rendering instead */}
                   {currentPage === 1 ? (
                     <PaginationPrevious 
                       className="pointer-events-none opacity-50"
@@ -488,7 +513,6 @@ const AllSuppliers = () => {
                 ))}
                 
                 <PaginationItem>
-                  {/* Fixed here: Removed disabled prop and used conditional rendering instead */}
                   {currentPage === totalPages ? (
                     <PaginationNext 
                       className="pointer-events-none opacity-50"
