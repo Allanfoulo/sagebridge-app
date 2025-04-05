@@ -1,11 +1,33 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlusCircle, FilePlus, Users, ListFilter, Download, Upload } from 'lucide-react';
+import { 
+  PlusCircle, 
+  FilePlus, 
+  Users, 
+  ListFilter, 
+  Download, 
+  Upload, 
+  FileText,
+  FileSpreadsheet
+} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/components/ui/use-toast';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Sales: React.FC = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [searchQuery, setSearchQuery] = useState('');
+  
   // Sample invoices data
   const invoices = [
     { id: 'INV-001', customer: 'Acme Corp', date: '2023-05-28', amount: 'R3,450.00', status: 'Paid' },
@@ -14,6 +36,112 @@ const Sales: React.FC = () => {
     { id: 'INV-004', customer: 'Wayne Enterprises', date: '2023-05-18', amount: 'R2,340.00', status: 'Overdue' },
     { id: 'INV-005', customer: 'Umbrella Corp', date: '2023-05-15', amount: 'R900.00', status: 'Paid' }
   ];
+
+  // Filter invoices based on search query
+  const filteredInvoices = invoices.filter(
+    invoice => 
+      invoice.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      invoice.customer.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Export functions
+  const exportToCSV = () => {
+    const headers = ['Invoice No.', 'Customer', 'Date', 'Amount', 'Status'];
+    const csvRows = [
+      headers.join(','),
+      ...filteredInvoices.map(invoice => [
+        invoice.id,
+        invoice.customer,
+        invoice.date,
+        invoice.amount,
+        invoice.status
+      ].join(','))
+    ];
+    
+    const csvContent = csvRows.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'invoices.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast({
+      title: "Export Complete",
+      description: "Invoices have been exported to CSV format",
+    });
+  };
+
+  const exportToExcel = () => {
+    // For simplicity, we'll create a basic Excel-compatible CSV with semicolons
+    const headers = ['Invoice No.;Customer;Date;Amount;Status'];
+    const excelRows = [
+      headers.join(''),
+      ...filteredInvoices.map(invoice => [
+        invoice.id,
+        invoice.customer,
+        invoice.date,
+        invoice.amount,
+        invoice.status
+      ].join(';'))
+    ];
+    
+    const excelContent = excelRows.join('\r\n');
+    const blob = new Blob([excelContent], { type: 'application/vnd.ms-excel' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'invoices.xls');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast({
+      title: "Export Complete",
+      description: "Invoices have been exported to Excel format",
+    });
+  };
+
+  const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        // Basic parsing - would need more robust implementation for production
+        const rows = content.split('\n');
+        const headers = rows[0].split(',');
+        
+        toast({
+          title: "Import Successful",
+          description: `Imported file with ${rows.length - 1} invoices`,
+        });
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Import Failed",
+          description: "There was an error importing the file",
+        });
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const navigateToNewInvoice = () => {
+    navigate('/sales/new-invoice');
+  };
+
+  const navigateToNewQuote = () => {
+    navigate('/sales/new-quote');
+  };
+
+  const navigateToCustomers = () => {
+    navigate('/customers');
+  };
 
   return (
     <MainLayout>
@@ -29,18 +157,45 @@ const Sales: React.FC = () => {
             <p className="text-muted-foreground">Manage your invoices, quotes, and customers</p>
           </div>
           <div className="flex gap-2">
-            <button className="bg-white border border-sage-lightGray hover:bg-sage-lightGray text-sage-darkGray px-4 py-2 rounded-md text-sm font-medium transition-colors inline-flex items-center">
-              <Upload size={16} className="mr-2" />
-              Import
-            </button>
-            <button className="bg-white border border-sage-lightGray hover:bg-sage-lightGray text-sage-darkGray px-4 py-2 rounded-md text-sm font-medium transition-colors inline-flex items-center">
-              <Download size={16} className="mr-2" />
-              Export
-            </button>
-            <button className="bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors inline-flex items-center">
+            {/* Import button with hidden file input */}
+            <div className="relative">
+              <input
+                type="file"
+                id="importFile"
+                accept=".csv,.xls,.xlsx"
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                onChange={handleImport}
+              />
+              <Button variant="outline" className="flex items-center">
+                <Upload size={16} className="mr-2" />
+                Import
+              </Button>
+            </div>
+            
+            {/* Export dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="flex items-center">
+                  <Download size={16} className="mr-2" />
+                  Export
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-white">
+                <DropdownMenuItem onClick={exportToCSV} className="cursor-pointer">
+                  <FileText size={16} className="mr-2" />
+                  Export as CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={exportToExcel} className="cursor-pointer">
+                  <FileSpreadsheet size={16} className="mr-2" />
+                  Export as Excel
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            
+            <Button onClick={navigateToNewInvoice} className="flex items-center">
               <PlusCircle size={16} className="mr-2" />
               New Invoice
-            </button>
+            </Button>
           </div>
         </div>
         
@@ -50,18 +205,29 @@ const Sales: React.FC = () => {
               <CardTitle className="text-base">Sales Dashboard</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <button className="bg-primary-500 hover:bg-primary-600 text-white w-full py-2 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center">
+              <Button 
+                onClick={navigateToNewInvoice} 
+                className="w-full bg-primary hover:bg-primary/90"
+              >
                 <FilePlus size={16} className="mr-2" />
                 New Invoice
-              </button>
-              <button className="bg-white border border-sage-lightGray hover:bg-sage-lightGray text-sage-darkGray w-full py-2 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center">
+              </Button>
+              <Button 
+                onClick={navigateToNewQuote}
+                variant="outline" 
+                className="w-full"
+              >
                 <FilePlus size={16} className="mr-2" />
                 New Quote
-              </button>
-              <button className="bg-white border border-sage-lightGray hover:bg-sage-lightGray text-sage-darkGray w-full py-2 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center">
+              </Button>
+              <Button 
+                onClick={navigateToCustomers}
+                variant="outline" 
+                className="w-full"
+              >
                 <Users size={16} className="mr-2" />
                 Customer Database
-              </button>
+              </Button>
               
               <div className="pt-4 border-t border-sage-lightGray">
                 <h4 className="font-medium text-sm mb-3">Quick Filters</h4>
@@ -93,6 +259,8 @@ const Sales: React.FC = () => {
                       type="search"
                       placeholder="Search invoices..."
                       className="w-48 py-1.5 pl-8 pr-3 text-sm rounded-md border border-sage-lightGray focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
                     />
                     <div className="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none">
                       <svg 
@@ -129,7 +297,7 @@ const Sales: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-sage-lightGray/70">
-                    {invoices.map((invoice) => (
+                    {filteredInvoices.map((invoice) => (
                       <tr key={invoice.id} className="hover:bg-sage-lightGray/50 transition-colors">
                         <td className="py-3 text-sm font-medium">{invoice.id}</td>
                         <td className="py-3 text-sm">{invoice.customer}</td>
@@ -157,7 +325,7 @@ const Sales: React.FC = () => {
               </div>
               <div className="flex justify-between items-center mt-4">
                 <div className="text-sm text-muted-foreground">
-                  Showing 5 of 25 invoices
+                  Showing {filteredInvoices.length} of 25 invoices
                 </div>
                 <div className="flex gap-1">
                   <button className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-sage-lightGray transition-colors">

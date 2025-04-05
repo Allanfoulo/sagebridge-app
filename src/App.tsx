@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -15,6 +14,8 @@ import React from "react";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Sales from "./pages/Sales";
+import NewInvoice from "./pages/sales/NewInvoice";
+import NewQuote from "./pages/sales/NewQuote";
 import Purchases from "./pages/Purchases";
 import Banking from "./pages/Banking";
 import Reports from "./pages/Reports";
@@ -160,6 +161,8 @@ const App = () => {
                       {/* Protected routes */}
                       <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
                       <Route path="/sales" element={<ProtectedRoute><Sales /></ProtectedRoute>} />
+                      <Route path="/sales/new-invoice" element={<ProtectedRoute><NewInvoice /></ProtectedRoute>} />
+                      <Route path="/sales/new-quote" element={<ProtectedRoute><NewQuote /></ProtectedRoute>} />
                       <Route path="/purchases" element={<ProtectedRoute><Purchases /></ProtectedRoute>} />
                       <Route path="/banking" element={<ProtectedRoute><Banking /></ProtectedRoute>} />
                       <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
@@ -167,10 +170,6 @@ const App = () => {
                       <Route path="/customers/add" element={<ProtectedRoute><AddCustomer /></ProtectedRoute>} />
                       <Route path="/suppliers" element={<ProtectedRoute><Suppliers /></ProtectedRoute>} />
                       <Route path="/suppliers/add" element={<ProtectedRoute><AddSupplier /></ProtectedRoute>} />
-                      <Route path="/suppliers/all" element={<ProtectedRoute><AllSuppliers /></ProtectedRoute>} />
-                      <Route path="/suppliers/active" element={<ProtectedRoute><ActiveSuppliers /></ProtectedRoute>} />
-                      <Route path="/suppliers/inactive" element={<ProtectedRoute><InactiveSuppliers /></ProtectedRoute>} />
-                      <Route path="/suppliers/by-category" element={<ProtectedRoute><SuppliersByCategory /></ProtectedRoute>} />
                       
                       {/* Supplier Transaction Routes */}
                       <Route path="/suppliers/transactions/purchase-orders" element={<ProtectedRoute><PurchaseOrders /></ProtectedRoute>} />
