@@ -14,12 +14,12 @@ const SystemStatus = () => {
   useEffect(() => {
     const checkSystem = async () => {
       try {
-        // Check database connection
-        const { data, error } = await supabase.from('profiles').select('count', { count: 'exact', head: true });
+        // Check database connection with a simplified query that doesn't rely on specific tables
+        const { data: healthData, error: healthError } = await supabase.rpc('pg_stat_database_size', { dbname: 'postgres' }).maybeSingle();
         
-        if (error) {
+        if (healthError) {
+          console.error("Database health check error:", healthError);
           setStatus(prev => ({ ...prev, database: 'error' }));
-          console.error("Database check error:", error);
         } else {
           setStatus(prev => ({ ...prev, database: 'operational' }));
         }
@@ -27,8 +27,8 @@ const SystemStatus = () => {
         // Check auth service
         const authResponse = await supabase.auth.getSession();
         if (authResponse.error) {
-          setStatus(prev => ({ ...prev, auth: 'error' }));
           console.error("Auth check error:", authResponse.error);
+          setStatus(prev => ({ ...prev, auth: 'error' }));
         } else {
           setStatus(prev => ({ ...prev, auth: 'operational' }));
         }
@@ -47,6 +47,7 @@ const SystemStatus = () => {
     // Update time every 30 seconds
     const timer = setInterval(() => {
       setStatus(prev => ({ ...prev, time: new Date().toISOString() }));
+      checkSystem(); // Also recheck system status periodically
     }, 30000);
     
     return () => clearInterval(timer);
