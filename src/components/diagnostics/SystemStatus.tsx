@@ -14,8 +14,10 @@ const SystemStatus = () => {
   useEffect(() => {
     const checkSystem = async () => {
       try {
-        // Check database connection with a simplified query that doesn't rely on specific tables
-        const { data: healthData, error: healthError } = await supabase.rpc('pg_stat_database_size', { dbname: 'postgres' }).maybeSingle();
+        // Check database connection with a simple query that doesn't rely on RPC functions
+        const { error: healthError } = await supabase
+          .from('profiles')
+          .select('id', { count: 'exact', head: true });
         
         if (healthError) {
           console.error("Database health check error:", healthError);
