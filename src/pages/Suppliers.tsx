@@ -124,7 +124,13 @@ const Suppliers = () => {
             </AccordionTrigger>
             <AccordionContent className="px-4 pb-4">
               <nav className="space-y-2">
-                <Button variant="ghost" className="w-full justify-start hover:bg-sage-blue/10 hover:text-sage-blue">Supplier Balances</Button>
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start hover:bg-sage-blue/10 hover:text-sage-blue"
+                  onClick={() => navigate('/suppliers/reports/balances')}
+                >
+                  Supplier Balances
+                </Button>
                 <Button variant="ghost" className="w-full justify-start hover:bg-sage-blue/10 hover:text-sage-blue">Aging Analysis</Button>
                 <Button variant="ghost" className="w-full justify-start hover:bg-sage-blue/10 hover:text-sage-blue">Payment History</Button>
                 <Button variant="ghost" className="w-full justify-start hover:bg-sage-blue/10 hover:text-sage-blue">Purchase Analysis</Button>

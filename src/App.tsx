@@ -47,6 +47,9 @@ import ActiveSuppliers from './pages/suppliers/ActiveSuppliers';
 import InactiveSuppliers from './pages/suppliers/InactiveSuppliers';
 import SuppliersByCategory from './pages/suppliers/SuppliersByCategory';
 
+// Supplier Report pages
+import SupplierBalances from './pages/suppliers/reports/SupplierBalances';
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -73,6 +76,10 @@ const App = () => (
               <Route path="/suppliers/active" element={<ActiveSuppliers />} />
               <Route path="/suppliers/inactive" element={<InactiveSuppliers />} />
               <Route path="/suppliers/by-category" element={<SuppliersByCategory />} />
+              
+              {/* Supplier Reports Routes */}
+              <Route path="/suppliers/reports/balances" element={<SupplierBalances />} />
+              
               <Route path="/settings" element={<Settings />} />
               <Route path="/administration" element={<Administration />} />
               <Route path="/administration/users" element={<ManageUsers />} />
