@@ -30,6 +30,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Separator } from '@/components/ui/separator';
+import { saveInvoice, availableCurrencies, getCurrencySymbol } from '@/utils/salesInvoiceService';
 
 // Sample customers data
 const customers = [
@@ -48,6 +49,7 @@ const formSchema = z.object({
   invoiceNumber: z.string().min(1, "Invoice number is required"),
   paymentTerms: z.string().optional(),
   notes: z.string().optional(),
+  currency: z.string().min(1, "Currency is required"),
   items: z.array(
     z.object({
       description: z.string().min(1, "Description is required"),
@@ -66,6 +68,7 @@ const NewInvoice: React.FC = () => {
   const { toast } = useToast();
   const today = format(new Date(), 'yyyy-MM-dd');
   const thirtyDaysLater = format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Initialize form with default values
   const form = useForm<FormValues>({
@@ -77,6 +80,7 @@ const NewInvoice: React.FC = () => {
       invoiceNumber: `INV-${format(new Date(), 'yyyyMMdd')}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
       paymentTerms: 'Net 30',
       notes: '',
+      currency: 'ZAR', // Default to South African Rand
       items: [
         {
           description: '',
@@ -88,6 +92,10 @@ const NewInvoice: React.FC = () => {
       ],
     },
   });
+
+  // Get the selected currency
+  const selectedCurrency = form.watch('currency');
+  const currencySymbol = getCurrencySymbol(selectedCurrency);
 
   // Calculate subtotal, tax total, and grand total
   const items = form.watch('items') || [];
@@ -140,16 +148,36 @@ const NewInvoice: React.FC = () => {
   };
 
   // Form submission
-  const onSubmit = (data: FormValues) => {
-    console.log("Form data:", data);
-    
-    toast({
-      title: "Invoice Created",
-      description: "Invoice has been successfully created and saved.",
-    });
-    
-    // Navigate back to sales page after successful submission
-    setTimeout(() => navigate('/sales'), 1500);
+  const onSubmit = async (data: FormValues) => {
+    setIsSubmitting(true);
+    try {
+      const result = await saveInvoice(data);
+      
+      if (result.success) {
+        toast({
+          title: "Invoice Created",
+          description: "Invoice has been successfully created and saved.",
+        });
+        
+        // Navigate back to sales page after successful submission
+        setTimeout(() => navigate('/sales'), 1500);
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error Saving Invoice",
+          description: "There was a problem saving the invoice. Please try again.",
+        });
+      }
+    } catch (error) {
+      console.error("Error saving invoice:", error);
+      toast({
+        variant: "destructive",
+        title: "Error Saving Invoice",
+        description: "An unexpected error occurred. Please try again.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -187,9 +215,10 @@ const NewInvoice: React.FC = () => {
               <Button 
                 className="gap-2" 
                 onClick={form.handleSubmit(onSubmit)}
+                disabled={isSubmitting}
               >
                 <Save className="h-4 w-4" />
-                Save Invoice
+                {isSubmitting ? 'Saving...' : 'Save Invoice'}
               </Button>
             </div>
           </div>
@@ -197,6 +226,41 @@ const NewInvoice: React.FC = () => {
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
+            {/* Currency Selection */}
+            <Card className="mb-4">
+              <CardContent className="pt-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="currency"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Currency</FormLabel>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select currency" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="bg-white">
+                            {availableCurrencies.map(currency => (
+                              <SelectItem key={currency.value} value={currency.value}>
+                                {currency.symbol} - {currency.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+            
             {/* Invoice Info Card */}
             <Card className="mb-6">
               <CardHeader>
@@ -385,7 +449,7 @@ const NewInvoice: React.FC = () => {
                         />
                       </div>
                       <div className="col-span-1 text-center font-medium">
-                        {(item.quantity * item.unitPrice).toFixed(2)}
+                        {currencySymbol}{(item.quantity * item.unitPrice).toFixed(2)}
                       </div>
                       <div className="col-span-1 text-center">
                         <Button
@@ -407,13 +471,13 @@ const NewInvoice: React.FC = () => {
                     <div className="flex justify-end space-y-2 text-sm">
                       <div className="grid grid-cols-2 gap-4 w-1/3">
                         <div className="text-right">Subtotal:</div>
-                        <div className="text-right font-medium">${subtotal.toFixed(2)}</div>
+                        <div className="text-right font-medium">{currencySymbol}{subtotal.toFixed(2)}</div>
                         
                         <div className="text-right">Tax:</div>
-                        <div className="text-right font-medium">${taxTotal.toFixed(2)}</div>
+                        <div className="text-right font-medium">{currencySymbol}{taxTotal.toFixed(2)}</div>
                         
                         <div className="text-right font-medium">Total:</div>
-                        <div className="text-right font-bold">${grandTotal.toFixed(2)}</div>
+                        <div className="text-right font-bold">{currencySymbol}{grandTotal.toFixed(2)}</div>
                       </div>
                     </div>
                   </div>
@@ -493,9 +557,10 @@ const NewInvoice: React.FC = () => {
                 <Button 
                   type="submit"
                   className="gap-2"
+                  disabled={isSubmitting}
                 >
                   <Save className="h-4 w-4" />
-                  Save Invoice
+                  {isSubmitting ? 'Saving...' : 'Save Invoice'}
                 </Button>
               </div>
             </div>
