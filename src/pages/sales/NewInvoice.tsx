@@ -166,7 +166,24 @@ const NewInvoice: React.FC = () => {
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true);
     try {
-      const result = await saveInvoice(data);
+      const invoiceData = {
+        customer: data.customer,
+        invoiceDate: data.invoiceDate,
+        dueDate: data.dueDate,
+        invoiceNumber: data.invoiceNumber,
+        paymentTerms: data.paymentTerms,
+        notes: data.notes || '',
+        currency: data.currency,
+        items: data.items.map(item => ({
+          description: item.description,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          tax: item.tax,
+          total: item.quantity * item.unitPrice
+        }))
+      };
+      
+      const result = await saveInvoice(invoiceData);
       
       if (result.success) {
         toast({

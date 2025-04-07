@@ -20,6 +20,32 @@ interface Invoice {
   currency: string;
 }
 
+// Define types for database tables to satisfy TypeScript
+type SalesInvoice = {
+  id?: string;
+  customer_id: string;
+  invoice_number: string;
+  invoice_date: string;
+  due_date: string;
+  payment_terms: string;
+  subtotal: number;
+  tax_total: number;
+  total: number;
+  notes?: string;
+  currency: string;
+  status: string;
+}
+
+type SalesInvoiceItem = {
+  id?: string;
+  invoice_id: string;
+  description: string;
+  quantity: number;
+  unit_price: number;
+  tax_percent: number;
+  line_total: number;
+}
+
 export const saveInvoice = async (invoice: Invoice) => {
   try {
     // Calculate totals
@@ -42,7 +68,7 @@ export const saveInvoice = async (invoice: Invoice) => {
         notes: invoice.notes,
         currency: invoice.currency,
         status: 'Draft'
-      })
+      } as SalesInvoice)
       .select('id')
       .single();
 
@@ -58,7 +84,7 @@ export const saveInvoice = async (invoice: Invoice) => {
       unit_price: item.unitPrice,
       tax_percent: item.tax,
       line_total: item.quantity * item.unitPrice
-    }));
+    } as SalesInvoiceItem));
 
     const { error: itemsError } = await supabase
       .from('sales_invoice_items')
