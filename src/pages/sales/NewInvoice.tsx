@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
@@ -314,7 +315,7 @@ const NewInvoice: React.FC = () => {
                             </FormControl>
                             <SelectContent className="bg-white">
                               {loading ? (
-                                <SelectItem disabled value="">Loading customers...</SelectItem>
+                                <SelectItem value="loading">Loading customers...</SelectItem>
                               ) : customers.length > 0 ? (
                                 customers.map(customer => (
                                   <SelectItem key={customer.id} value={customer.id}>
@@ -322,7 +323,7 @@ const NewInvoice: React.FC = () => {
                                   </SelectItem>
                                 ))
                               ) : (
-                                <SelectItem disabled value="">No customers found</SelectItem>
+                                <SelectItem value="no-customers">No customers found</SelectItem>
                               )}
                             </SelectContent>
                           </Select>
