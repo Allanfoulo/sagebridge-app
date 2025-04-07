@@ -35,42 +35,50 @@ import {
 import { cn } from '@/lib/utils';
 import { CalendarIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { 
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel, 
+  FormMessage 
+} from '@/components/ui/form';
 
 const customerSchema = z.object({
   customerName: z.string().min(2, 'Customer name must be at least 2 characters'),
   category: z.string(),
-  isCashSale: z.boolean(),
+  isCashSale: z.boolean().default(false),
   openingBalance: z.string(),
   openingBalanceDate: z.date().optional(),
-  autoAllocateReceipts: z.boolean(),
-  isActive: z.boolean(),
+  autoAllocateReceipts: z.boolean().default(false),
+  isActive: z.boolean().default(true),
   creditLimit: z.string(),
   vatNumber: z.string().optional(),
   salesRep: z.string().optional(),
-  acceptsElectronicInvoices: z.boolean(),
+  acceptsElectronicInvoices: z.boolean().default(false),
   postalAddress: z.object({
-    line1: z.string(),
+    line1: z.string().min(1, 'Address line 1 is required'),
     line2: z.string().optional(),
     line3: z.string().optional(),
     line4: z.string().optional(),
-    postalCode: z.string(),
+    postalCode: z.string().min(1, 'Postal code is required'),
   }),
   deliveryAddress: z.object({
     type: z.string(),
-    line1: z.string(),
+    line1: z.string().min(1, 'Address line 1 is required'),
     line2: z.string().optional(),
     line3: z.string().optional(),
     line4: z.string().optional(),
-    postalCode: z.string(),
+    postalCode: z.string().min(1, 'Postal code is required'),
   }),
   contactDetails: z.object({
-    contactName: z.string(),
+    contactName: z.string().min(1, 'Contact name is required'),
     email: z.string().email('Invalid email address'),
-    telephone: z.string(),
-    mobile: z.string(),
+    telephone: z.string().min(1, 'Telephone number is required'),
+    mobile: z.string().min(1, 'Mobile number is required'),
     fax: z.string().optional(),
     webAddress: z.string().optional(),
-    canViewInvoicesOnline: z.boolean(),
+    canViewInvoicesOnline: z.boolean().default(false),
   }),
   defaultSettings: z.object({
     statementDistribution: z.string().optional(),
@@ -88,14 +96,9 @@ const AddCustomer = () => {
   const { toast } = useToast();
   const [date, setDate] = React.useState<Date>();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [categories, setCategories] = React.useState<{ id: string; name: string }[]>([]);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    setValue,
-    watch,
-  } = useForm<CustomerFormData>({
+  const form = useForm<CustomerFormData>({
     resolver: zodResolver(customerSchema),
     defaultValues: {
       isActive: true,
@@ -111,20 +114,43 @@ const AddCustomer = () => {
     },
   });
 
+  // Load customer categories
+  React.useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('customer_categories')
+          .select('id, name');
+        
+        if (error) {
+          throw error;
+        }
+        
+        if (data) {
+          setCategories(data);
+        }
+      } catch (error: any) {
+        console.error('Error fetching customer categories:', error);
+      }
+    };
+    
+    fetchCategories();
+  }, []);
+
   // Set opening balance date when date changes
   React.useEffect(() => {
     if (date) {
-      setValue('openingBalanceDate', date);
+      form.setValue('openingBalanceDate', date);
     }
-  }, [date, setValue]);
+  }, [date, form]);
 
   const copyPostalToDelivery = () => {
-    const postalAddress = watch('postalAddress');
-    setValue('deliveryAddress.line1', postalAddress.line1);
-    setValue('deliveryAddress.line2', postalAddress.line2 || '');
-    setValue('deliveryAddress.line3', postalAddress.line3 || '');
-    setValue('deliveryAddress.line4', postalAddress.line4 || '');
-    setValue('deliveryAddress.postalCode', postalAddress.postalCode);
+    const postalAddress = form.watch('postalAddress');
+    form.setValue('deliveryAddress.line1', postalAddress.line1);
+    form.setValue('deliveryAddress.line2', postalAddress.line2 || '');
+    form.setValue('deliveryAddress.line3', postalAddress.line3 || '');
+    form.setValue('deliveryAddress.line4', postalAddress.line4 || '');
+    form.setValue('deliveryAddress.postalCode', postalAddress.postalCode);
   };
 
   const onSubmit = async (data: CustomerFormData) => {
@@ -164,8 +190,7 @@ const AddCustomer = () => {
       const { data: newCustomer, error } = await supabase
         .from('customers')
         .insert(customerData)
-        .select()
-        .single();
+        .select();
       
       if (error) {
         throw error;
@@ -230,338 +255,646 @@ const AddCustomer = () => {
           </TabsList>
 
           <TabsContent value="details" className="p-6">
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-              {/* Main Information */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="customerName">Customer Name</Label>
-                  <Input
-                    id="customerName"
-                    {...register('customerName')}
-                    className={errors.customerName ? 'border-red-500' : ''}
-                  />
-                  {errors.customerName && (
-                    <p className="text-sm text-red-500">{errors.customerName.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="category">Category</Label>
-                  <Select onValueChange={(value) => setValue('category', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="(None)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">(None)</SelectItem>
-                      <SelectItem value="retail">Retail</SelectItem>
-                      <SelectItem value="wholesale">Wholesale</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="isCashSale"
-                    {...register('isCashSale')}
-                  />
-                  <Label htmlFor="isCashSale">Cash Sale Customer</Label>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="openingBalance">Opening Balance</Label>
-                  <Input
-                    id="openingBalance"
-                    {...register('openingBalance')}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Opening Balance as At</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !date && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {date ? format(date, "PPP") : <span>Pick a date</span>}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={date}
-                        onSelect={setDate}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="autoAllocateReceipts"
-                    {...register('autoAllocateReceipts')}
-                  />
-                  <Label htmlFor="autoAllocateReceipts">Auto Allocate Receipts to Oldest Invoice</Label>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="isActive"
-                    {...register('isActive')}
-                  />
-                  <Label htmlFor="isActive">Active</Label>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="creditLimit">Credit Limit</Label>
-                  <Input
-                    id="creditLimit"
-                    {...register('creditLimit')}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="vatNumber">Customer VAT Number</Label>
-                  <Input
-                    id="vatNumber"
-                    {...register('vatNumber')}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="salesRep">Sales Rep</Label>
-                  <Select onValueChange={(value) => setValue('salesRep', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="(None)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">(None)</SelectItem>
-                      <SelectItem value="john">John Doe</SelectItem>
-                      <SelectItem value="jane">Jane Smith</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="acceptsElectronicInvoices"
-                    {...register('acceptsElectronicInvoices')}
-                  />
-                  <Label htmlFor="acceptsElectronicInvoices">Accepts Electronic Invoices</Label>
-                </div>
-              </div>
-
-              <Separator />
-
-              {/* Postal Address */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Postal Address</h3>
-                <div className="grid grid-cols-1 gap-4">
-                  <Input {...register('postalAddress.line1')} placeholder="Address Line 1" />
-                  <Input {...register('postalAddress.line2')} placeholder="Address Line 2" />
-                  <Input {...register('postalAddress.line3')} placeholder="Address Line 3" />
-                  <Input {...register('postalAddress.line4')} placeholder="Address Line 4" />
-                  <Input {...register('postalAddress.postalCode')} placeholder="Postal Code" />
-                </div>
-              </div>
-
-              <Separator />
-
-              {/* Delivery Address */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">Delivery Address</h3>
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={copyPostalToDelivery}
-                    >
-                      <Copy className="h-4 w-4 mr-2" />
-                      Copy from Postal Address
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                    >
-                      <Map className="h-4 w-4 mr-2" />
-                      Map
-                    </Button>
-                  </div>
-                </div>
-                <Select onValueChange={(value) => setValue('deliveryAddress.type', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select address type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="residential">Residential</SelectItem>
-                    <SelectItem value="business">Business</SelectItem>
-                    <SelectItem value="pobox">PO Box</SelectItem>
-                  </SelectContent>
-                </Select>
-                <div className="grid grid-cols-1 gap-4">
-                  <Input {...register('deliveryAddress.line1')} placeholder="Address Line 1" />
-                  <Input {...register('deliveryAddress.line2')} placeholder="Address Line 2" />
-                  <Input {...register('deliveryAddress.line3')} placeholder="Address Line 3" />
-                  <Input {...register('deliveryAddress.line4')} placeholder="Address Line 4" />
-                  <Input {...register('deliveryAddress.postalCode')} placeholder="Postal Code" />
-                </div>
-              </div>
-
-              <Separator />
-
-              {/* Contact Details */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Contact Details</h3>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                {/* Main Information */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="contactName">Contact Name</Label>
-                    <Input
-                      id="contactName"
-                      {...register('contactDetails.contactName')}
-                    />
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="customerName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Customer Name</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      {...register('contactDetails.email')}
-                    />
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="category"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Category</FormLabel>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="(None)" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="none">(None)</SelectItem>
+                            {categories.map(category => (
+                              <SelectItem key={category.id} value={category.id}>
+                                {category.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                  <div className="space-y-2">
-                    <Label htmlFor="telephone">Telephone</Label>
-                    <Input
-                      id="telephone"
-                      {...register('contactDetails.telephone')}
-                    />
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="isCashSale"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormLabel>Cash Sale Customer</FormLabel>
+                      </FormItem>
+                    )}
+                  />
 
-                  <div className="space-y-2">
-                    <Label htmlFor="mobile">Mobile</Label>
-                    <Input
-                      id="mobile"
-                      {...register('contactDetails.mobile')}
-                    />
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="openingBalance"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Opening Balance</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                  <div className="space-y-2">
-                    <Label htmlFor="fax">Fax</Label>
-                    <Input
-                      id="fax"
-                      {...register('contactDetails.fax')}
-                    />
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="openingBalanceDate"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Opening Balance as At</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                className={cn(
+                                  "w-full justify-start text-left font-normal",
+                                  !date && "text-muted-foreground"
+                                )}
+                              >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {date ? format(date, "PPP") : <span>Pick a date</span>}
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={date}
+                              onSelect={setDate}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                  <div className="space-y-2">
-                    <Label htmlFor="webAddress">Web Address</Label>
-                    <Input
-                      id="webAddress"
-                      {...register('contactDetails.webAddress')}
-                    />
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="autoAllocateReceipts"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormLabel>Auto Allocate Receipts to Oldest Invoice</FormLabel>
+                      </FormItem>
+                    )}
+                  />
 
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="canViewInvoicesOnline"
-                      {...register('contactDetails.canViewInvoicesOnline')}
+                  <FormField
+                    control={form.control}
+                    name="isActive"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormLabel>Active</FormLabel>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="creditLimit"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Credit Limit</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="vatNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Customer VAT Number</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="salesRep"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Sales Rep</FormLabel>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="(None)" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="none">(None)</SelectItem>
+                            <SelectItem value="john">John Doe</SelectItem>
+                            <SelectItem value="jane">Jane Smith</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="acceptsElectronicInvoices"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormLabel>Accepts Electronic Invoices</FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <Separator />
+
+                {/* Postal Address */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Postal Address</h3>
+                  <div className="grid grid-cols-1 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="postalAddress.line1"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input {...field} placeholder="Address Line 1" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                    <Label htmlFor="canViewInvoicesOnline">Invoices can be viewed online</Label>
+                    <FormField
+                      control={form.control}
+                      name="postalAddress.line2"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input {...field} placeholder="Address Line 2" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="postalAddress.line3"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input {...field} placeholder="Address Line 3" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="postalAddress.line4"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input {...field} placeholder="Address Line 4" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="postalAddress.postalCode"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input {...field} placeholder="Postal Code" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
                 </div>
-              </div>
 
-              <Separator />
+                <Separator />
 
-              {/* Default Settings */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Default Settings</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="statementDistribution">Statement Distribution</Label>
-                    <Select onValueChange={(value) => setValue('defaultSettings.statementDistribution', value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select distribution method" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="email">Email</SelectItem>
-                        <SelectItem value="post">Post</SelectItem>
-                        <SelectItem value="none">None</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="defaultDiscount">Default Discount</Label>
-                    <Input
-                      id="defaultDiscount"
-                      {...register('defaultSettings.defaultDiscount')}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="defaultPriceList">Default Price List</Label>
-                    <Select onValueChange={(value) => setValue('defaultSettings.defaultPriceList', value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select price list" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="retail">Retail</SelectItem>
-                        <SelectItem value="wholesale">Wholesale</SelectItem>
-                        <SelectItem value="special">Special</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="paymentDue">Due Date for Payment</Label>
+                {/* Delivery Address */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold">Delivery Address</h3>
                     <div className="flex gap-2">
-                      <Input
-                        id="paymentDueDays"
-                        {...register('defaultSettings.paymentDueDays')}
-                        className="w-24"
-                      />
-                      <Select onValueChange={(value) => setValue('defaultSettings.paymentDueType', value)}>
-                        <SelectTrigger className="flex-1">
-                          <SelectValue placeholder="Select due date type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="end_month">End of the current Month</SelectItem>
-                          <SelectItem value="days">Days</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={copyPostalToDelivery}
+                      >
+                        <Copy className="h-4 w-4 mr-2" />
+                        Copy from Postal Address
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                      >
+                        <Map className="h-4 w-4 mr-2" />
+                        Map
+                      </Button>
+                    </div>
+                  </div>
+                  <FormField
+                    control={form.control}
+                    name="deliveryAddress.type"
+                    render={({ field }) => (
+                      <FormItem>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select address type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="residential">Residential</SelectItem>
+                            <SelectItem value="business">Business</SelectItem>
+                            <SelectItem value="pobox">PO Box</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="grid grid-cols-1 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="deliveryAddress.line1"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input {...field} placeholder="Address Line 1" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="deliveryAddress.line2"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input {...field} placeholder="Address Line 2" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="deliveryAddress.line3"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input {...field} placeholder="Address Line 3" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="deliveryAddress.line4"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input {...field} placeholder="Address Line 4" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="deliveryAddress.postalCode"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input {...field} placeholder="Postal Code" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Contact Details */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Contact Details</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="contactDetails.contactName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Contact Name</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="contactDetails.email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input {...field} type="email" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="contactDetails.telephone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Telephone</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="contactDetails.mobile"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Mobile</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="contactDetails.fax"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Fax</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="contactDetails.webAddress"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Web Address</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="contactDetails.canViewInvoicesOnline"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormLabel>Invoices can be viewed online</FormLabel>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Default Settings */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Default Settings</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="defaultSettings.statementDistribution"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Statement Distribution</FormLabel>
+                          <Select 
+                            onValueChange={field.onChange} 
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select distribution method" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="email">Email</SelectItem>
+                              <SelectItem value="post">Post</SelectItem>
+                              <SelectItem value="none">None</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="defaultSettings.defaultDiscount"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Default Discount</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="defaultSettings.defaultPriceList"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Default Price List</FormLabel>
+                          <Select 
+                            onValueChange={field.onChange} 
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select price list" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="retail">Retail</SelectItem>
+                              <SelectItem value="wholesale">Wholesale</SelectItem>
+                              <SelectItem value="special">Special</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="space-y-2">
+                      <FormLabel>Due Date for Payment</FormLabel>
+                      <div className="flex gap-2">
+                        <FormField
+                          control={form.control}
+                          name="defaultSettings.paymentDueDays"
+                          render={({ field }) => (
+                            <FormItem className="w-24">
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="defaultSettings.paymentDueType"
+                          render={({ field }) => (
+                            <FormItem className="flex-1">
+                              <Select 
+                                onValueChange={field.onChange} 
+                                defaultValue={field.value}
+                              >
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select due date type" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="end_month">End of the current Month</SelectItem>
+                                  <SelectItem value="days">Days</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Submit Buttons */}
-              <div className="flex justify-end gap-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => navigate('/customers')}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  type="submit" 
-                  className="bg-blue-600 hover:bg-blue-700"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? 'Creating...' : 'Create Customer'}
-                </Button>
-              </div>
-            </form>
+                {/* Submit Buttons */}
+                <div className="flex justify-end gap-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => navigate('/customers')}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    className="bg-blue-600 hover:bg-blue-700"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Creating...' : 'Create Customer'}
+                  </Button>
+                </div>
+              </form>
+            </Form>
           </TabsContent>
         </Tabs>
       </div>
