@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
 import { motion } from 'framer-motion';
@@ -31,23 +30,19 @@ import {
 } from "@/components/ui/form";
 import { Separator } from '@/components/ui/separator';
 import { saveInvoice, availableCurrencies, getCurrencySymbol } from '@/utils/salesInvoiceService';
+import { supabase } from '@/integrations/supabase/client';
 
-// Sample customers data
-const customers = [
-  { id: '1', name: 'Acme Corp' },
-  { id: '2', name: 'Globex Inc' },
-  { id: '3', name: 'Stark Industries' },
-  { id: '4', name: 'Wayne Enterprises' },
-  { id: '5', name: 'Umbrella Corp' },
-];
+interface Customer {
+  id: string;
+  name: string;
+}
 
-// Define the form schema with Zod
 const formSchema = z.object({
   customer: z.string().min(1, "Customer is required"),
   invoiceDate: z.string().min(1, "Invoice date is required"),
   dueDate: z.string().min(1, "Due date is required"),
   invoiceNumber: z.string().min(1, "Invoice number is required"),
-  paymentTerms: z.string().optional(),
+  paymentTerms: z.string().min(1, "Payment terms are required"),
   notes: z.string().optional(),
   currency: z.string().min(1, "Currency is required"),
   items: z.array(
@@ -69,8 +64,35 @@ const NewInvoice: React.FC = () => {
   const today = format(new Date(), 'yyyy-MM-dd');
   const thirtyDaysLater = format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Initialize form with default values
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('customers')
+          .select('id, name')
+          .order('name');
+        
+        if (error) throw error;
+        
+        setCustomers(data || []);
+      } catch (error) {
+        console.error('Error fetching customers:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load customers. Please try again.",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCustomers();
+  }, [toast]);
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -93,17 +115,14 @@ const NewInvoice: React.FC = () => {
     },
   });
 
-  // Get the selected currency
   const selectedCurrency = form.watch('currency');
   const currencySymbol = getCurrencySymbol(selectedCurrency);
 
-  // Calculate subtotal, tax total, and grand total
   const items = form.watch('items') || [];
   const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
   const taxTotal = items.reduce((sum, item) => sum + (item.quantity * item.unitPrice * item.tax / 100), 0);
   const grandTotal = subtotal + taxTotal;
 
-  // Add a new item to the invoice
   const addItem = () => {
     const currentItems = form.getValues('items');
     form.setValue('items', [
@@ -118,7 +137,6 @@ const NewInvoice: React.FC = () => {
     ]);
   };
 
-  // Remove an item from the invoice
   const removeItem = (index: number) => {
     const currentItems = form.getValues('items');
     if (currentItems.length > 1) {
@@ -132,13 +150,11 @@ const NewInvoice: React.FC = () => {
     }
   };
 
-  // Update item total when quantity or price changes
   const updateItemTotal = (index: number) => {
     const currentItems = form.getValues('items');
     const item = currentItems[index];
     const total = item.quantity * item.unitPrice;
     
-    // Update the item's total
     currentItems[index] = {
       ...item,
       total,
@@ -147,7 +163,6 @@ const NewInvoice: React.FC = () => {
     form.setValue('items', currentItems);
   };
 
-  // Form submission
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true);
     try {
@@ -159,7 +174,6 @@ const NewInvoice: React.FC = () => {
           description: "Invoice has been successfully created and saved.",
         });
         
-        // Navigate back to sales page after successful submission
         setTimeout(() => navigate('/sales'), 1500);
       } else {
         toast({
@@ -188,7 +202,6 @@ const NewInvoice: React.FC = () => {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3 }}
       >
-        {/* Back Button & Header */}
         <div className="flex flex-col space-y-2">
           <Button
             variant="ghost"
@@ -226,7 +239,6 @@ const NewInvoice: React.FC = () => {
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
-            {/* Currency Selection */}
             <Card className="mb-4">
               <CardContent className="pt-4">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -261,7 +273,6 @@ const NewInvoice: React.FC = () => {
               </CardContent>
             </Card>
             
-            {/* Invoice Info Card */}
             <Card className="mb-6">
               <CardHeader>
                 <CardTitle className="text-lg">Invoice Information</CardTitle>
@@ -285,11 +296,17 @@ const NewInvoice: React.FC = () => {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent className="bg-white">
-                              {customers.map(customer => (
-                                <SelectItem key={customer.id} value={customer.id}>
-                                  {customer.name}
-                                </SelectItem>
-                              ))}
+                              {loading ? (
+                                <SelectItem disabled value="">Loading customers...</SelectItem>
+                              ) : customers.length > 0 ? (
+                                customers.map(customer => (
+                                  <SelectItem key={customer.id} value={customer.id}>
+                                    {customer.name}
+                                  </SelectItem>
+                                ))
+                              ) : (
+                                <SelectItem disabled value="">No customers found</SelectItem>
+                              )}
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -375,7 +392,6 @@ const NewInvoice: React.FC = () => {
               </CardContent>
             </Card>
             
-            {/* Invoice Items Card */}
             <Card className="mb-6">
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-lg">Invoice Items</CardTitle>
@@ -393,7 +409,6 @@ const NewInvoice: React.FC = () => {
               
               <CardContent>
                 <div className="space-y-4">
-                  {/* Table Header */}
                   <div className="grid grid-cols-12 gap-2 font-medium text-sm text-muted-foreground py-2 border-b">
                     <div className="col-span-6">Description</div>
                     <div className="col-span-1 text-center">Qty</div>
@@ -403,7 +418,6 @@ const NewInvoice: React.FC = () => {
                     <div className="col-span-1 text-center"></div>
                   </div>
                   
-                  {/* Item Rows */}
                   {items.map((item, index) => (
                     <div key={index} className="grid grid-cols-12 gap-2 items-center">
                       <div className="col-span-6">
@@ -466,7 +480,6 @@ const NewInvoice: React.FC = () => {
                     </div>
                   ))}
                   
-                  {/* Totals */}
                   <div className="pt-4 border-t mt-6">
                     <div className="flex justify-end space-y-2 text-sm">
                       <div className="grid grid-cols-2 gap-4 w-1/3">
@@ -485,7 +498,6 @@ const NewInvoice: React.FC = () => {
               </CardContent>
             </Card>
             
-            {/* Additional Information Card */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Additional Information</CardTitle>
@@ -511,7 +523,6 @@ const NewInvoice: React.FC = () => {
               </CardContent>
             </Card>
             
-            {/* Action Buttons */}
             <div className="flex justify-between mt-6">
               <Button 
                 type="button"
@@ -527,7 +538,6 @@ const NewInvoice: React.FC = () => {
                   variant="outline"
                   className="gap-2"
                   onClick={() => {
-                    // Preview functionality would go here
                     toast({
                       title: "Preview",
                       description: "Invoice preview functionality is coming soon.",
@@ -543,7 +553,6 @@ const NewInvoice: React.FC = () => {
                   variant="outline"
                   className="gap-2"
                   onClick={() => {
-                    // Email functionality would go here
                     toast({
                       title: "Send Email",
                       description: "Email functionality is coming soon.",

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import { motion } from 'framer-motion';
@@ -41,7 +40,6 @@ const Sales: React.FC = () => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Fetch invoices from the database
   useEffect(() => {
     const loadInvoices = async () => {
       setIsLoading(true);
@@ -67,14 +65,12 @@ const Sales: React.FC = () => {
     loadInvoices();
   }, [toast]);
 
-  // Filter invoices based on search query
   const filteredInvoices = invoices.filter(
     invoice => 
       invoice.invoiceNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
       invoice.customer.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Export functions
   const exportToCSV = () => {
     const headers = ['Invoice No.', 'Customer', 'Date', 'Amount', 'Status'];
     const csvRows = [
@@ -105,7 +101,6 @@ const Sales: React.FC = () => {
   };
 
   const exportToExcel = () => {
-    // For simplicity, we'll create a basic Excel-compatible CSV with semicolons
     const headers = ['Invoice No.;Customer;Date;Amount;Status'];
     const excelRows = [
       headers.join(''),
@@ -142,7 +137,6 @@ const Sales: React.FC = () => {
     reader.onload = (e) => {
       try {
         const content = e.target?.result as string;
-        // Basic parsing - would need more robust implementation for production
         const rows = content.split('\n');
         const headers = rows[0].split(',');
         
@@ -187,7 +181,6 @@ const Sales: React.FC = () => {
             <p className="text-muted-foreground">Manage your invoices, quotes, and customers</p>
           </div>
           <div className="flex gap-2">
-            {/* Import button with hidden file input */}
             <div className="relative">
               <input
                 type="file"
@@ -202,7 +195,6 @@ const Sales: React.FC = () => {
               </Button>
             </div>
             
-            {/* Export dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="flex items-center">

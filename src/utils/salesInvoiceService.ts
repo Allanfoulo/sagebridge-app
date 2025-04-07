@@ -40,7 +40,8 @@ export const saveInvoice = async (invoice: Invoice) => {
         tax_total: taxTotal,
         total,
         notes: invoice.notes,
-        currency: invoice.currency
+        currency: invoice.currency,
+        status: 'Draft'
       })
       .select('id')
       .single();
