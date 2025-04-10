@@ -5,9 +5,10 @@ import { useNavigate } from 'react-router-dom';
 
 interface CustomerFormActionsProps {
   isSubmitting: boolean;
+  isEditing?: boolean;
 }
 
-const CustomerFormActions = ({ isSubmitting }: CustomerFormActionsProps) => {
+const CustomerFormActions = ({ isSubmitting, isEditing = false }: CustomerFormActionsProps) => {
   const navigate = useNavigate();
   
   return (
@@ -24,7 +25,9 @@ const CustomerFormActions = ({ isSubmitting }: CustomerFormActionsProps) => {
         className="bg-blue-600 hover:bg-blue-700"
         disabled={isSubmitting}
       >
-        {isSubmitting ? 'Creating...' : 'Create Customer'}
+        {isSubmitting 
+          ? (isEditing ? 'Updating...' : 'Creating...') 
+          : (isEditing ? 'Update Customer' : 'Create Customer')}
       </Button>
     </div>
   );

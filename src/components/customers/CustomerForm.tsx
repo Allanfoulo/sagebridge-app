@@ -19,6 +19,7 @@ interface CustomerFormProps {
   isSubmitting: boolean;
   categories: { id: string; name: string }[];
   copyPostalToDelivery: () => void;
+  isEditing?: boolean;
 }
 
 const CustomerForm = ({
@@ -28,7 +29,8 @@ const CustomerForm = ({
   setDate,
   isSubmitting,
   categories,
-  copyPostalToDelivery
+  copyPostalToDelivery,
+  isEditing = false
 }: CustomerFormProps) => {
   return (
     <Form {...form}>
@@ -66,7 +68,7 @@ const CustomerForm = ({
         <DefaultSettingsSection control={form.control} />
 
         {/* Submit Buttons */}
-        <CustomerFormActions isSubmitting={isSubmitting} />
+        <CustomerFormActions isSubmitting={isSubmitting} isEditing={isEditing} />
       </form>
     </Form>
   );

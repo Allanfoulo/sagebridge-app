@@ -27,6 +27,22 @@ export const useCustomerForm = () => {
         defaultDiscount: '0.00%',
         paymentDueType: 'End of the current Month',
       },
+      postalAddress: {
+        line1: '',
+        postalCode: '',
+      },
+      deliveryAddress: {
+        type: 'business',
+        line1: '',
+        postalCode: '',
+      },
+      contactDetails: {
+        contactName: '',
+        email: '',
+        telephone: '',
+        mobile: '',
+        canViewInvoicesOnline: false,
+      },
     },
   });
 
@@ -72,6 +88,7 @@ export const useCustomerForm = () => {
   const onSubmit = async (data: CustomerFormData) => {
     try {
       setIsSubmitting(true);
+      console.log('Submitting customer data:', data);
 
       // Parse the credit limit to remove currency symbols and convert to a number
       let creditLimit = 0;
@@ -79,6 +96,14 @@ export const useCustomerForm = () => {
         creditLimit = parseFloat(data.creditLimit.replace(/[^\d.-]/g, ''));
       } catch (error) {
         console.error('Error parsing credit limit:', error);
+      }
+
+      // Parse opening balance
+      let openingBalance = 0;
+      try {
+        openingBalance = parseFloat(data.openingBalance.replace(/[^\d.-]/g, ''));
+      } catch (error) {
+        console.error('Error parsing opening balance:', error);
       }
 
       // Prepare customer data for the database
@@ -101,6 +126,8 @@ export const useCustomerForm = () => {
         is_active: data.isActive,
         credit_limit: creditLimit
       };
+
+      console.log('Sending to database:', customerData);
 
       // Insert data into the customers table
       const { data: newCustomer, error } = await supabase
