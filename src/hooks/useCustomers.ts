@@ -40,15 +40,17 @@ export const useCustomers = () => {
         throw error;
       }
 
-      // Transform the data to match the expected format
-      const formattedCustomers = data.map(customer => ({
+      // Transform the data to match the expected format with proper typing
+      const formattedCustomers: Customer[] = data.map(customer => ({
         id: customer.id,
         name: customer.name,
-        company: customer.company || customer.name, // Use name as company if not available
+        // Since company doesn't exist in the database, use name as fallback
+        company: customer.name, 
         email: customer.email,
         phone: customer.phone,
         location: [customer.city, customer.state, customer.country].filter(Boolean).join(', '),
-        status: customer.is_active ? 'active' : 'inactive',
+        // Cast the boolean is_active to our union type 'active' | 'inactive'
+        status: customer.is_active ? 'active' : 'inactive' as 'active' | 'inactive',
         totalSpent: 0, // We don't have this data yet
         lastOrder: new Date().toISOString(), // Placeholder
         avatar: '/placeholder.svg',
