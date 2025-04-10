@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import MainLayout from '@/components/layout/MainLayout';
-import { Users, UserPlus, Search, MoreHorizontal, Phone, Mail, MapPin, Briefcase, Calendar } from 'lucide-react';
+import { Users, UserPlus, Search, MoreHorizontal, Phone, Mail, MapPin, Briefcase, Calendar, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar } from '@/components/ui/avatar';
@@ -33,80 +33,19 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-
-const customers = [
-  {
-    id: 1,
-    name: 'Sarah Nkosi',
-    company: 'Cape Fresh Market',
-    email: 'sarah@capefresh.co.za',
-    phone: '+27 83 456 7890',
-    location: 'Cape Town',
-    status: 'active',
-    totalSpent: 78500,
-    lastOrder: '2023-08-15',
-    avatar: '/placeholder.svg',
-  },
-  {
-    id: 2,
-    name: 'Michael van der Merwe',
-    company: 'Tech Solutions SA',
-    email: 'michael@techsolutions.co.za',
-    phone: '+27 82 345 6789',
-    location: 'Johannesburg',
-    status: 'active',
-    totalSpent: 124750,
-    lastOrder: '2023-09-02',
-    avatar: '/placeholder.svg',
-  },
-  {
-    id: 3,
-    name: 'Thabo Molefe',
-    company: 'Urban Designs',
-    email: 'thabo@urbandesigns.co.za',
-    phone: '+27 71 234 5678',
-    location: 'Pretoria',
-    status: 'inactive',
-    totalSpent: 43200,
-    lastOrder: '2023-05-22',
-    avatar: '/placeholder.svg',
-  },
-  {
-    id: 4,
-    name: 'Lerato Dlamini',
-    company: 'Golden Harvest',
-    email: 'lerato@goldenharvest.co.za',
-    phone: '+27 76 123 4567',
-    location: 'Durban',
-    status: 'active',
-    totalSpent: 92350,
-    lastOrder: '2023-08-28',
-    avatar: '/placeholder.svg',
-  },
-  {
-    id: 5,
-    name: 'James Smith',
-    company: 'Coastal Supplies',
-    email: 'james@coastalsupplies.co.za',
-    phone: '+27 74 987 6543',
-    location: 'Port Elizabeth',
-    status: 'active',
-    totalSpent: 67800,
-    lastOrder: '2023-07-19',
-    avatar: '/placeholder.svg',
-  },
-];
+import { useCustomers } from '@/hooks/useCustomers';
 
 const Customers = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState('table');
-  const [selectedCustomer, setSelectedCustomer] = useState<typeof customers[0] | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<any | null>(null);
+  const { customers, isLoading, refreshCustomers } = useCustomers();
 
   const filteredCustomers = customers.filter(customer => 
-    customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.email.toLowerCase().includes(searchQuery.toLowerCase())
+    customer.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    customer.company?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    customer.email?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const formatCurrency = (amount: number) => {
@@ -117,7 +56,7 @@ const Customers = () => {
     }).format(amount);
   };
 
-  const handleViewCustomer = (customer: typeof customers[0]) => {
+  const handleViewCustomer = (customer: any) => {
     setSelectedCustomer(customer);
     setViewMode('details');
   };
@@ -163,84 +102,106 @@ const Customers = () => {
         {viewMode === 'table' ? (
           <Card>
             <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Contact</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Total Spent</TableHead>
-                    <TableHead>Last Order</TableHead>
-                    <TableHead className="w-10"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredCustomers.map((customer) => (
-                    <TableRow key={customer.id} className="cursor-pointer" onClick={() => handleViewCustomer(customer)}>
-                      <TableCell>
-                        <div className="flex items-center space-x-3">
-                          <Avatar className="h-9 w-9">
-                            <img 
-                              src={customer.avatar} 
-                              alt={customer.name}
-                              className="object-cover"
-                            />
-                          </Avatar>
-                          <div>
-                            <div className="font-medium">{customer.name}</div>
-                            <div className="text-sm text-muted-foreground">{customer.company}</div>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col text-sm">
-                          <span>{customer.email}</span>
-                          <span className="text-muted-foreground">{customer.phone}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                          customer.status === 'active' 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {customer.status === 'active' ? 'Active' : 'Inactive'}
-                        </div>
-                      </TableCell>
-                      <TableCell>{formatCurrency(customer.totalSpent)}</TableCell>
-                      <TableCell>
-                        {new Date(customer.lastOrder).toLocaleDateString('en-ZA')}
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={(e) => {
-                              e.stopPropagation();
-                              handleViewCustomer(customer);
-                            }}>
-                              View details
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
-                              Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={(e) => e.stopPropagation()}
-                              className="text-red-600"
-                            >
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
+              {isLoading ? (
+                <div className="flex justify-center items-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <span className="ml-2 text-lg">Loading customers...</span>
+                </div>
+              ) : filteredCustomers.length === 0 ? (
+                <div className="text-center py-12">
+                  <Users className="h-12 w-12 mx-auto text-muted-foreground" />
+                  <h3 className="mt-4 text-lg font-medium">No customers found</h3>
+                  <p className="text-muted-foreground mt-2">
+                    {searchQuery ? 'Try a different search term' : 'Add your first customer to get started'}
+                  </p>
+                  <Button 
+                    onClick={() => navigate('/customers/add')} 
+                    className="mt-4"
+                  >
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Add Customer
+                  </Button>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Customer</TableHead>
+                      <TableHead>Contact</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Total Spent</TableHead>
+                      <TableHead>Last Order</TableHead>
+                      <TableHead className="w-10"></TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredCustomers.map((customer) => (
+                      <TableRow key={customer.id} className="cursor-pointer" onClick={() => handleViewCustomer(customer)}>
+                        <TableCell>
+                          <div className="flex items-center space-x-3">
+                            <Avatar className="h-9 w-9">
+                              <img 
+                                src={customer.avatar} 
+                                alt={customer.name}
+                                className="object-cover"
+                              />
+                            </Avatar>
+                            <div>
+                              <div className="font-medium">{customer.name}</div>
+                              <div className="text-sm text-muted-foreground">{customer.company}</div>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col text-sm">
+                            <span>{customer.email}</span>
+                            <span className="text-muted-foreground">{customer.phone}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                            customer.status === 'active' 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {customer.status === 'active' ? 'Active' : 'Inactive'}
+                          </div>
+                        </TableCell>
+                        <TableCell>{formatCurrency(customer.totalSpent || 0)}</TableCell>
+                        <TableCell>
+                          {customer.lastOrder ? new Date(customer.lastOrder).toLocaleDateString('en-ZA') : 'No orders'}
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={(e) => {
+                                e.stopPropagation();
+                                handleViewCustomer(customer);
+                              }}>
+                                View details
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={(e) => e.stopPropagation()}
+                                className="text-red-600"
+                              >
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         ) : (
