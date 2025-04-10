@@ -63,11 +63,16 @@ export const useCustomerForm = () => {
         }
       } catch (error: any) {
         console.error('Error fetching customer categories:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load customer categories',
+          variant: 'destructive',
+        });
       }
     };
     
     fetchCategories();
-  }, []);
+  }, [toast]);
 
   // Set opening balance date when date changes
   useEffect(() => {
@@ -106,6 +111,16 @@ export const useCustomerForm = () => {
         console.error('Error parsing opening balance:', error);
       }
 
+      // Check auth session
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) {
+        throw new Error('Authentication error: ' + sessionError.message);
+      }
+      
+      if (!sessionData.session) {
+        throw new Error('You must be logged in to create a customer');
+      }
+
       // Prepare customer data for the database
       const customerData = {
         name: data.customerName,
@@ -124,7 +139,9 @@ export const useCustomerForm = () => {
         notes: `Contact: ${data.contactDetails.contactName}, Mobile: ${data.contactDetails.mobile}`,
         website: data.contactDetails.webAddress || null,
         is_active: data.isActive,
-        credit_limit: creditLimit
+        credit_limit: creditLimit,
+        created_by: sessionData.session.user.id,
+        updated_by: sessionData.session.user.id
       };
 
       console.log('Sending to database:', customerData);
@@ -136,6 +153,7 @@ export const useCustomerForm = () => {
         .select();
       
       if (error) {
+        console.error('Database error:', error);
         throw error;
       }
       
