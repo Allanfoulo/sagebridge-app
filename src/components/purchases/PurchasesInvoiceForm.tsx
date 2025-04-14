@@ -1,7 +1,8 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Plus, Trash2, Save, X } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Save, X, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -177,6 +178,11 @@ const PurchasesInvoiceForm: React.FC<NewInvoiceProps> = ({ onClose, isModal = fa
     }));
   };
 
+  const handleAddNewSupplier = () => {
+    // Navigate to the add supplier page with a returnTo parameter
+    navigate(`/suppliers/add?returnTo=${encodeURIComponent('/purchases/new-invoice')}`);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -202,7 +208,7 @@ const PurchasesInvoiceForm: React.FC<NewInvoiceProps> = ({ onClose, isModal = fa
       setIsLoading(true);
       
       // First insert the invoice
-      const { data: invoiceResponseData, error: invoiceError } = await supabase
+      const { data: invoiceData, error: invoiceError } = await supabase
         .from('supplier_invoices')
         .insert([
           {
@@ -223,15 +229,13 @@ const PurchasesInvoiceForm: React.FC<NewInvoiceProps> = ({ onClose, isModal = fa
         
       if (invoiceError) throw invoiceError;
       
-      const invoiceId = invoiceResponseData.id;
-      
       // Then insert all the invoice items
       // Using individual insert operations instead of batch to avoid schema mismatch
       for (const item of items) {
         const { error: itemError } = await supabase
           .from('purchase_order_items')
           .insert({
-            purchase_order_id: invoiceId, // Using purchase_order_id to store invoice_id
+            purchase_order_id: invoiceData.id, // Using purchase_order_id to store invoice_id
             description: item.description,
             quantity: item.quantity,
             unit_price: item.unit_price,
@@ -294,7 +298,19 @@ const PurchasesInvoiceForm: React.FC<NewInvoiceProps> = ({ onClose, isModal = fa
             <CardContent className="pt-6">
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="supplier">Supplier</Label>
+                  <div className="flex justify-between items-center mb-2">
+                    <Label htmlFor="supplier">Supplier</Label>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleAddNewSupplier}
+                      className="h-8"
+                    >
+                      <UserPlus className="h-3.5 w-3.5 mr-1" />
+                      New
+                    </Button>
+                  </div>
                   <Select 
                     value={invoiceFormData.supplier_id} 
                     onValueChange={(value) => setInvoiceFormData({...invoiceFormData, supplier_id: value})}
@@ -303,6 +319,11 @@ const PurchasesInvoiceForm: React.FC<NewInvoiceProps> = ({ onClose, isModal = fa
                       <SelectValue placeholder="Select supplier" />
                     </SelectTrigger>
                     <SelectContent>
+                      {suppliers.length === 0 && (
+                        <SelectItem value="" disabled>
+                          No suppliers available. Add a supplier first.
+                        </SelectItem>
+                      )}
                       {suppliers.map((supplier) => (
                         <SelectItem key={supplier.id} value={supplier.id}>{supplier.name}</SelectItem>
                       ))}

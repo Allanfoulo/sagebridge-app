@@ -76,7 +76,8 @@ const AddSupplier = () => {
         tax_id: data.taxId || null,
         payment_terms: data.paymentTerms,
         notes: data.notes || null,
-        category_id: data.category !== 'other' ? data.category : null,
+        // Only set category_id if a non-empty, non-'other' value is selected
+        category_id: data.category && data.category !== 'other' ? data.category : null,
         is_active: true
       };
       
@@ -96,8 +97,14 @@ const AddSupplier = () => {
         description: `${data.companyName} has been added successfully`,
       });
       
-      // Navigate back to suppliers page
-      navigate('/suppliers');
+      // Check if we were redirected from the purchase invoice page
+      const returnTo = new URLSearchParams(window.location.search).get('returnTo');
+      if (returnTo) {
+        navigate(returnTo);
+      } else {
+        // Navigate back to suppliers page
+        navigate('/suppliers');
+      }
     } catch (error: any) {
       console.error('Error adding supplier:', error);
       toast({
@@ -258,6 +265,7 @@ const AddSupplier = () => {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
+                              <SelectItem value="">Select a category</SelectItem>
                               <SelectItem value="raw-materials">Raw Materials</SelectItem>
                               <SelectItem value="equipment">Equipment</SelectItem>
                               <SelectItem value="services">Services</SelectItem>
@@ -283,6 +291,7 @@ const AddSupplier = () => {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
+                              <SelectItem value="">Select payment terms</SelectItem>
                               <SelectItem value="net-30">Net 30</SelectItem>
                               <SelectItem value="net-45">Net 45</SelectItem>
                               <SelectItem value="net-60">Net 60</SelectItem>
