@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
-// Aligned with actual database structure
+// Define the Profile interface to match what's actually in the database
 export interface Profile {
   id: string;
   full_name: string | null;
@@ -12,11 +12,6 @@ export interface Profile {
   avatar_url: string | null;
   created_at: string;
   updated_at: string;
-  // These fields don't exist in the database yet, but we'll handle them as optional
-  company?: string | null;
-  bio?: string | null;
-  phone?: string | null;
-  address?: string | null;
 }
 
 export const useProfile = () => {
@@ -46,7 +41,7 @@ export const useProfile = () => {
         throw error;
       }
 
-      // Create a profile object with all required fields, with fallbacks for missing ones
+      // Create a profile object with the fields that exist in the database
       const profileData: Profile = {
         id: data.id,
         full_name: data.full_name,
@@ -54,11 +49,6 @@ export const useProfile = () => {
         avatar_url: data.avatar_url,
         created_at: data.created_at,
         updated_at: data.updated_at,
-        // Add properties that may not exist in the database yet
-        company: null,
-        bio: null,
-        phone: null,
-        address: null,
       };
 
       setProfile(profileData);
@@ -81,15 +71,11 @@ export const useProfile = () => {
     try {
       setIsLoading(true);
       
-      // Filter out fields that don't exist in the actual database
-      const { company, bio, phone, address, ...validUpdates } = updates;
-      const updateData = { ...validUpdates };
-      
       // Only include fields that exist in the database schema
       const { error } = await supabase
         .from('profiles')
         .update({
-          ...updateData,
+          ...updates,
           updated_at: new Date().toISOString()
         })
         .eq('id', user.id);
