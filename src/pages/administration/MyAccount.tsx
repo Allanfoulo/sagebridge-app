@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Camera, Mail, Phone, Building, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,6 +12,9 @@ import * as z from 'zod';
 import { useToast } from '@/components/ui/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { Loader2 } from 'lucide-react';
 
 const profileSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -26,44 +30,125 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 const MyAccount = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-
-  // Mock user data
-  const defaultValues = {
-    name: 'John Doe',
-    email: 'john@example.com',
-    phone: '+1 (555) 123-4567',
-    company: 'Acme Corp',
-    address: '123 Business Street, Suite 100, New York, NY 10001',
-    role: 'Administrator',
-  };
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors, isDirty },
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
-    defaultValues,
+    defaultValues: {
+      name: '',
+      email: '',
+      phone: '',
+      company: '',
+      address: '',
+      role: 'User',
+    },
   });
 
-  const onSubmit = async (data: ProfileFormData) => {
+  useEffect(() => {
+    if (user) {
+      fetchUserProfile();
+    }
+  }, [user]);
+
+  const fetchUserProfile = async () => {
     try {
-      // TODO: Implement profile update logic
-      console.log('Form data:', data);
+      setLoading(true);
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user?.id)
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      reset({
+        name: data.full_name || '',
+        email: user?.email || '',
+        phone: data.phone || '',
+        company: data.company || '',
+        address: data.address || '',
+        role: 'User', // Default role
+      });
+
+      setAvatarUrl(data.avatar_url);
+    } catch (error: any) {
+      console.error('Error fetching profile:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load profile data. ' + error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onSubmit = async (data: ProfileFormData) => {
+    if (!user) return;
+    
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: data.name,
+          phone: data.phone,
+          company: data.company,
+          address: data.address,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+
+      if (error) {
+        throw error;
+      }
       
       toast({
         title: 'Success',
         description: 'Profile has been updated successfully',
         variant: 'default',
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: 'Error',
-        description: 'Failed to update profile. Please try again.',
+        description: 'Failed to update profile. ' + error.message,
         variant: 'destructive',
       });
     }
   };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
+
+  if (loading) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="p-6 flex justify-center items-center h-[calc(100vh-6rem)]"
+      >
+        <div className="flex flex-col items-center gap-2">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p>Loading account information...</p>
+        </div>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
@@ -97,8 +182,11 @@ const MyAccount = () => {
           <div className="flex items-center gap-6">
             <div className="relative">
               <Avatar className="h-24 w-24">
-                <AvatarImage src="https://github.com/shadcn.png" alt="Profile" />
-                <AvatarFallback>JD</AvatarFallback>
+                {avatarUrl ? (
+                  <AvatarImage src={avatarUrl} alt="Profile" />
+                ) : (
+                  <AvatarFallback>{getInitials(user?.email?.split('@')[0] || 'U')}</AvatarFallback>
+                )}
               </Avatar>
               <Button
                 size="icon"
@@ -109,8 +197,8 @@ const MyAccount = () => {
               </Button>
             </div>
             <div>
-              <h2 className="text-xl font-semibold">{defaultValues.name}</h2>
-              <p className="text-gray-500">{defaultValues.role}</p>
+              <h2 className="text-xl font-semibold">{user?.email?.split('@')[0]}</h2>
+              <p className="text-gray-500">User</p>
             </div>
           </div>
 
@@ -140,11 +228,13 @@ const MyAccount = () => {
                   id="email"
                   {...register('email')}
                   className={`pl-10 ${errors.email ? 'border-red-500' : ''}`}
+                  disabled
                 />
               </div>
               {errors.email && (
                 <p className="text-sm text-red-500">{errors.email.message}</p>
               )}
+              <p className="text-xs text-muted-foreground">Email cannot be changed</p>
             </div>
 
             {/* Phone Field */}
@@ -212,4 +302,4 @@ const MyAccount = () => {
   );
 };
 
-export default MyAccount; 
+export default MyAccount;

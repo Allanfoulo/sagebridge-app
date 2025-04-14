@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Search, 
@@ -9,20 +9,79 @@ import {
   X, 
   ChevronDown, 
   User,
-  HelpCircle
+  HelpCircle,
+  Settings,
+  LogOut,
+  UserCog
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface HeaderProps {
   toggleSidebar: () => void;
   sidebarCollapsed: boolean;
 }
 
+interface ProfileData {
+  full_name: string;
+  avatar_url?: string;
+  company?: string;
+}
+
 const Header: React.FC<HeaderProps> = ({ toggleSidebar, sidebarCollapsed }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   
+  useEffect(() => {
+    if (user) {
+      fetchProfileData();
+    }
+  }, [user]);
+
+  const fetchProfileData = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('full_name, avatar_url, company')
+        .eq('id', user?.id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching profile:', error);
+        return;
+      }
+
+      setProfileData(data);
+    } catch (error) {
+      console.error('Error in fetchProfileData:', error);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      navigate('/auth');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
+
   return (
     <header className="h-16 border-b border-border/60 bg-background/95 backdrop-blur-sm px-4 flex items-center justify-between z-10 shadow-nav">
       <div className="flex items-center">
@@ -115,12 +174,18 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, sidebarCollapsed }) => {
             onClick={() => setShowProfile(!showProfile)}
             className="flex items-center gap-2 hover:bg-sage-lightGray rounded-full transition-colors pl-1 pr-2 py-1"
           >
-            <div className="w-8 h-8 bg-sage-blue rounded-full flex items-center justify-center text-white">
-              <User size={16} />
-            </div>
+            <Avatar className="w-8 h-8">
+              {profileData?.avatar_url ? (
+                <AvatarImage src={profileData.avatar_url} alt={profileData.full_name} />
+              ) : (
+                <AvatarFallback className="bg-sage-blue text-white">
+                  {profileData?.full_name ? getInitials(profileData.full_name) : 'U'}
+                </AvatarFallback>
+              )}
+            </Avatar>
             <div className="hidden md:block text-left">
-              <p className="text-sm font-medium leading-none">John Doe</p>
-              <p className="text-xs text-muted-foreground leading-none mt-1">Admin</p>
+              <p className="text-sm font-medium leading-none">{profileData?.full_name || user?.email?.split('@')[0] || 'User'}</p>
+              <p className="text-xs text-muted-foreground leading-none mt-1">{profileData?.company || 'Admin'}</p>
             </div>
             <ChevronDown size={14} className="text-muted-foreground hidden md:block" />
           </button>
@@ -134,21 +199,36 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, sidebarCollapsed }) => {
               className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 border border-border"
             >
               <div className="px-4 py-2 border-b border-border">
-                <p className="font-medium text-sm">John Doe</p>
-                <p className="text-xs text-muted-foreground">john.doe@example.com</p>
+                <p className="font-medium text-sm">{profileData?.full_name || 'User'}</p>
+                <p className="text-xs text-muted-foreground">{user?.email}</p>
               </div>
               <div className="pt-1">
-                <button className="w-full text-left px-4 py-2 text-sm hover:bg-sage-lightGray transition-colors">
+                <button 
+                  className="w-full text-left px-4 py-2 text-sm hover:bg-sage-lightGray transition-colors flex items-center"
+                  onClick={() => {
+                    setShowProfile(false);
+                    navigate('/settings');
+                  }}
+                >
+                  <Settings className="mr-2 h-4 w-4" />
                   Profile Settings
                 </button>
-                <button className="w-full text-left px-4 py-2 text-sm hover:bg-sage-lightGray transition-colors">
-                  Company Settings
-                </button>
-                <button className="w-full text-left px-4 py-2 text-sm hover:bg-sage-lightGray transition-colors">
-                  Preferences
+                <button 
+                  className="w-full text-left px-4 py-2 text-sm hover:bg-sage-lightGray transition-colors flex items-center"
+                  onClick={() => {
+                    setShowProfile(false);
+                    navigate('/administration/my-account');
+                  }}
+                >
+                  <UserCog className="mr-2 h-4 w-4" />
+                  My Account
                 </button>
                 <div className="border-t border-border mt-1 pt-1">
-                  <button className="w-full text-left px-4 py-2 text-sm hover:bg-sage-lightGray transition-colors text-red-600">
+                  <button 
+                    className="w-full text-left px-4 py-2 text-sm hover:bg-sage-lightGray transition-colors text-red-600 flex items-center"
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
                     Logout
                   </button>
                 </div>

@@ -1,35 +1,123 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User, Upload } from 'lucide-react';
+import { User, Upload, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const ProfileSettings: React.FC = () => {
-  const [name, setName] = useState('John Doe');
-  const [email, setEmail] = useState('john.doe@example.com');
-  const [company, setCompany] = useState('SageBridge Inc.');
+  const { user } = useAuth();
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [company, setCompany] = useState('');
   const [bio, setBio] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
 
-  const handleSave = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (user) {
+      fetchUserProfile();
+    }
+  }, [user]);
+
+  const fetchUserProfile = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user?.id)
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      if (data) {
+        setFullName(data.full_name || '');
+        setEmail(user?.email || '');
+        setCompany(data.company || '');
+        setBio(data.bio || '');
+        setAvatarUrl(data.avatar_url || '');
+      }
+    } catch (error: any) {
+      console.error('Error fetching profile:', error);
+      toast({
+        title: 'Error loading profile',
+        description: error.message || 'Failed to load profile data',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaving(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setSaving(false);
+    if (!user) return;
+
+    try {
+      setSaving(true);
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: fullName,
+          company: company,
+          bio: bio,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+
+      if (error) {
+        throw error;
+      }
+
       toast({
         title: "Profile updated",
         description: "Your profile has been updated successfully.",
       });
-    }, 1000);
+    } catch (error: any) {
+      console.error('Error updating profile:', error);
+      toast({
+        title: "Update failed",
+        description: error.message || "An unexpected error occurred while updating your profile",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
   };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="flex justify-center items-center h-64">
+          <div className="flex flex-col items-center gap-2">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-sm text-muted-foreground">Loading profile...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -44,8 +132,11 @@ const ProfileSettings: React.FC = () => {
           <div className="flex flex-col gap-8 sm:flex-row">
             <div className="flex flex-col items-center gap-2 sm:w-1/3">
               <Avatar className="h-24 w-24">
-                <AvatarImage alt="User avatar" src="/placeholder.svg" />
-                <AvatarFallback className="text-2xl">JD</AvatarFallback>
+                {avatarUrl ? (
+                  <AvatarImage alt="User avatar" src={avatarUrl} />
+                ) : (
+                  <AvatarFallback className="text-2xl">{getInitials(fullName || 'User')}</AvatarFallback>
+                )}
               </Avatar>
               <Button variant="outline" size="sm" className="mt-2 gap-1">
                 <Upload className="h-4 w-4" /> Upload
@@ -61,8 +152,8 @@ const ProfileSettings: React.FC = () => {
                   <Label htmlFor="name">Full Name</Label>
                   <Input 
                     id="name" 
-                    value={name} 
-                    onChange={(e) => setName(e.target.value)} 
+                    value={fullName} 
+                    onChange={(e) => setFullName(e.target.value)} 
                     placeholder="Enter your full name" 
                   />
                 </div>
@@ -75,7 +166,10 @@ const ProfileSettings: React.FC = () => {
                     value={email} 
                     onChange={(e) => setEmail(e.target.value)} 
                     placeholder="Enter your email" 
+                    disabled
+                    className="bg-gray-100"
                   />
+                  <p className="text-xs text-muted-foreground">Email cannot be changed</p>
                 </div>
               </div>
               
@@ -103,7 +197,7 @@ const ProfileSettings: React.FC = () => {
           </div>
           
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline">Cancel</Button>
+            <Button type="button" variant="outline" onClick={fetchUserProfile}>Cancel</Button>
             <Button type="submit" disabled={saving}>
               {saving ? 'Saving...' : 'Save changes'}
             </Button>

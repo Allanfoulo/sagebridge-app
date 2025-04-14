@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -20,15 +20,48 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 interface SidebarProps {
   collapsed: boolean;
 }
 
+interface ProfileData {
+  company?: string;
+}
+
 const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
+  const [companyName, setCompanyName] = useState('Organization');
+
+  useEffect(() => {
+    if (user) {
+      fetchProfileData();
+    }
+  }, [user]);
+
+  const fetchProfileData = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('company')
+        .eq('id', user?.id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching profile:', error);
+        return;
+      }
+
+      if (data && data.company) {
+        setCompanyName(data.company);
+      }
+    } catch (error) {
+      console.error('Error in fetchProfileData:', error);
+    }
+  };
 
   const handleLogout = async () => {
     await signOut();
@@ -84,7 +117,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
       {/* Organization name */}
       {!collapsed ? (
         <div className="px-4 py-2 text-xs text-[hsl(var(--sidebar-foreground))]/70">
-          <span>Innovation Imperial Ltd</span>
+          <span>{companyName}</span>
         </div>
       ) : null}
       
