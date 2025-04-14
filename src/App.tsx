@@ -31,6 +31,7 @@ import UserAccess from './pages/administration/UserAccess';
 import ChangePassword from './pages/administration/ChangePassword';
 import MyAccount from './pages/administration/MyAccount';
 import AddCustomer from './pages/AddCustomer';
+import NewPurchaseInvoice from './pages/purchases/NewPurchaseInvoice';
 
 // Accounting pages
 import Accounting from './pages/Accounting';
@@ -164,6 +165,7 @@ const App = () => {
                       <Route path="/sales/new-invoice" element={<ProtectedRoute><NewInvoice /></ProtectedRoute>} />
                       <Route path="/sales/new-quote" element={<ProtectedRoute><NewQuote /></ProtectedRoute>} />
                       <Route path="/purchases" element={<ProtectedRoute><Purchases /></ProtectedRoute>} />
+                      <Route path="/purchases/new-invoice" element={<ProtectedRoute><NewPurchaseInvoice /></ProtectedRoute>} />
                       <Route path="/banking" element={<ProtectedRoute><Banking /></ProtectedRoute>} />
                       <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
                       <Route path="/customers" element={<ProtectedRoute><Customers /></ProtectedRoute>} />

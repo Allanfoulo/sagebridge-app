@@ -55,10 +55,10 @@ export const useProfile = () => {
         created_at: data.created_at,
         updated_at: data.updated_at,
         // Default values for fields that might not exist in the database
-        company: null,
-        bio: null,
-        phone: null,
-        address: null,
+        company: data.company || null,
+        bio: data.bio || null,
+        phone: data.phone || null,
+        address: data.address || null,
       };
 
       setProfile(profileData);
