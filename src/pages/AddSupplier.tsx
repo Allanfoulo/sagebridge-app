@@ -265,7 +265,7 @@ const AddSupplier = () => {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="">Select a category</SelectItem>
+                              <SelectItem value="placeholder">Select a category</SelectItem>
                               <SelectItem value="raw-materials">Raw Materials</SelectItem>
                               <SelectItem value="equipment">Equipment</SelectItem>
                               <SelectItem value="services">Services</SelectItem>
@@ -291,7 +291,7 @@ const AddSupplier = () => {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="">Select payment terms</SelectItem>
+                              <SelectItem value="placeholder">Select payment terms</SelectItem>
                               <SelectItem value="net-30">Net 30</SelectItem>
                               <SelectItem value="net-45">Net 45</SelectItem>
                               <SelectItem value="net-60">Net 60</SelectItem>

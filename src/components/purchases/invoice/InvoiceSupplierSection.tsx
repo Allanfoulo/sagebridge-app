@@ -71,7 +71,7 @@ const InvoiceSupplierSection: React.FC<InvoiceSupplierSectionProps> = ({
               </SelectTrigger>
               <SelectContent>
                 {suppliers.length === 0 && (
-                  <SelectItem value="" disabled>
+                  <SelectItem value="no-suppliers" disabled>
                     No suppliers available. Add a supplier first.
                   </SelectItem>
                 )}
