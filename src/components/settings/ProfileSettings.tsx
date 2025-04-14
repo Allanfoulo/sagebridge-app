@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from '@/components/ui/input';
@@ -9,56 +8,28 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User, Upload, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { useProfile } from '@/hooks/useProfile';
 
 const ProfileSettings: React.FC = () => {
   const { user } = useAuth();
+  const { profile, isLoading, updateProfile } = useProfile();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [company, setCompany] = useState('');
   const [bio, setBio] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    if (user) {
-      fetchUserProfile();
+    if (profile) {
+      setFullName(profile.full_name || '');
+      setEmail(user?.email || '');
+      setCompany(''); // Database doesn't have this field yet
+      setBio(''); // Database doesn't have this field yet
+      setAvatarUrl(profile.avatar_url || '');
     }
-  }, [user]);
-
-  const fetchUserProfile = async () => {
-    try {
-      setIsLoading(true);
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user?.id)
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      if (data) {
-        setFullName(data.full_name || '');
-        setEmail(user?.email || '');
-        setCompany(data.company || '');
-        setBio(data.bio || '');
-        setAvatarUrl(data.avatar_url || '');
-      }
-    } catch (error: any) {
-      console.error('Error fetching profile:', error);
-      toast({
-        title: 'Error loading profile',
-        description: error.message || 'Failed to load profile data',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [profile, user]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,24 +38,18 @@ const ProfileSettings: React.FC = () => {
     try {
       setSaving(true);
       
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          full_name: fullName,
-          company: company,
-          bio: bio,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', user.id);
-
-      if (error) {
-        throw error;
-      }
-
-      toast({
-        title: "Profile updated",
-        description: "Your profile has been updated successfully.",
+      const result = await updateProfile({
+        full_name: fullName,
+        // We know these fields don't exist yet in the database
+        // but we'll keep them in the interface for future use
       });
+
+      if (result) {
+        toast({
+          title: "Profile updated",
+          description: "Your profile has been updated successfully.",
+        });
+      }
     } catch (error: any) {
       console.error('Error updating profile:', error);
       toast({
@@ -180,7 +145,9 @@ const ProfileSettings: React.FC = () => {
                   value={company} 
                   onChange={(e) => setCompany(e.target.value)} 
                   placeholder="Enter your company" 
+                  disabled
                 />
+                <p className="text-xs text-muted-foreground">Company field will be available soon</p>
               </div>
               
               <div className="space-y-2">
@@ -191,13 +158,15 @@ const ProfileSettings: React.FC = () => {
                   onChange={(e) => setBio(e.target.value)} 
                   placeholder="Tell us a little about yourself" 
                   rows={4}
+                  disabled
                 />
+                <p className="text-xs text-muted-foreground">Bio field will be available soon</p>
               </div>
             </div>
           </div>
           
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={fetchUserProfile}>Cancel</Button>
+            <Button type="button" variant="outline">Cancel</Button>
             <Button type="submit" disabled={saving}>
               {saving ? 'Saving...' : 'Save changes'}
             </Button>

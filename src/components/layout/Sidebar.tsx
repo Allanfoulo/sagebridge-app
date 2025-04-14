@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -27,7 +26,7 @@ interface SidebarProps {
 }
 
 interface ProfileData {
-  company?: string;
+  full_name?: string | null;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
@@ -46,7 +45,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('company')
+        .select('full_name')
         .eq('id', user?.id)
         .single();
 
@@ -55,8 +54,8 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
         return;
       }
 
-      if (data && data.company) {
-        setCompanyName(data.company);
+      if (data && data.full_name) {
+        setCompanyName(data.full_name + "'s Organization");
       }
     } catch (error) {
       console.error('Error in fetchProfileData:', error);
@@ -81,7 +80,6 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
     { name: 'Settings', icon: Settings, path: '/settings' },
   ];
 
-  // Sidebar animation variants
   const sidebarVariants = {
     expanded: { width: '240px', transition: { duration: 0.3, ease: [0.61, 1, 0.88, 1] } },
     collapsed: { width: '72px', transition: { duration: 0.3, ease: [0.61, 1, 0.88, 1] } }
@@ -114,7 +112,6 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
         )}
       </div>
       
-      {/* Organization name */}
       {!collapsed ? (
         <div className="px-4 py-2 text-xs text-[hsl(var(--sidebar-foreground))]/70">
           <span>{companyName}</span>
@@ -163,7 +160,6 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
         </ul>
       </nav>
       
-      {/* Bottom actions fixed to bottom with proper spacing */}
       <div className="absolute bottom-0 left-0 w-full px-2 py-4 border-t border-[hsl(var(--sidebar-border))]/20 bg-[hsl(var(--sidebar-background))]">
         <div className={cn(
           "space-y-1",

@@ -16,6 +16,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
 
+// Remove validations for fields that don't exist yet
 const profileSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
@@ -74,9 +75,9 @@ const MyAccount = () => {
       reset({
         name: data.full_name || '',
         email: user?.email || '',
-        phone: data.phone || '',
-        company: data.company || '',
-        address: data.address || '',
+        phone: '', // Default empty string for now
+        company: '', // Default empty string for now
+        address: '', // Default empty string for now
         role: 'User', // Default role
       });
 
@@ -97,13 +98,11 @@ const MyAccount = () => {
     if (!user) return;
     
     try {
+      // Only update fields that exist in the database
       const { error } = await supabase
         .from('profiles')
         .update({
           full_name: data.name,
-          phone: data.phone,
-          company: data.company,
-          address: data.address,
           updated_at: new Date().toISOString()
         })
         .eq('id', user.id);
@@ -246,8 +245,10 @@ const MyAccount = () => {
                   id="phone"
                   {...register('phone')}
                   className="pl-10"
+                  disabled
                 />
               </div>
+              <p className="text-xs text-muted-foreground">Phone number field will be available soon</p>
             </div>
 
             {/* Company Field */}
@@ -259,8 +260,10 @@ const MyAccount = () => {
                   id="company"
                   {...register('company')}
                   className="pl-10"
+                  disabled
                 />
               </div>
+              <p className="text-xs text-muted-foreground">Company field will be available soon</p>
             </div>
 
             {/* Address Field */}
@@ -272,8 +275,10 @@ const MyAccount = () => {
                   id="address"
                   {...register('address')}
                   className="pl-10"
+                  disabled
                 />
               </div>
+              <p className="text-xs text-muted-foreground">Address field will be available soon</p>
             </div>
           </div>
 

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
@@ -26,9 +25,8 @@ interface HeaderProps {
 }
 
 interface ProfileData {
-  full_name: string;
-  avatar_url?: string;
-  company?: string;
+  full_name: string | null;
+  avatar_url?: string | null;
 }
 
 const Header: React.FC<HeaderProps> = ({ toggleSidebar, sidebarCollapsed }) => {
@@ -49,7 +47,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, sidebarCollapsed }) => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('full_name, avatar_url, company')
+        .select('full_name, avatar_url')
         .eq('id', user?.id)
         .single();
 
@@ -176,7 +174,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, sidebarCollapsed }) => {
           >
             <Avatar className="w-8 h-8">
               {profileData?.avatar_url ? (
-                <AvatarImage src={profileData.avatar_url} alt={profileData.full_name} />
+                <AvatarImage src={profileData.avatar_url} alt={profileData.full_name || ''} />
               ) : (
                 <AvatarFallback className="bg-sage-blue text-white">
                   {profileData?.full_name ? getInitials(profileData.full_name) : 'U'}
@@ -185,7 +183,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, sidebarCollapsed }) => {
             </Avatar>
             <div className="hidden md:block text-left">
               <p className="text-sm font-medium leading-none">{profileData?.full_name || user?.email?.split('@')[0] || 'User'}</p>
-              <p className="text-xs text-muted-foreground leading-none mt-1">{profileData?.company || 'Admin'}</p>
+              <p className="text-xs text-muted-foreground leading-none mt-1">User</p>
             </div>
             <ChevronDown size={14} className="text-muted-foreground hidden md:block" />
           </button>
