@@ -12,11 +12,11 @@ export interface Profile {
   avatar_url: string | null;
   created_at: string;
   updated_at: string;
-  // These fields may not exist in the database yet, but we'll handle them
-  company: string | null;
-  bio: string | null;
-  phone: string | null;
-  address: string | null;
+  // These fields don't exist in the database yet, but we'll handle them as optional
+  company?: string | null;
+  bio?: string | null;
+  phone?: string | null;
+  address?: string | null;
 }
 
 export const useProfile = () => {
@@ -54,11 +54,11 @@ export const useProfile = () => {
         avatar_url: data.avatar_url,
         created_at: data.created_at,
         updated_at: data.updated_at,
-        // Default values for fields that might not exist in the database
-        company: data.company || null,
-        bio: data.bio || null,
-        phone: data.phone || null,
-        address: data.address || null,
+        // Add properties that may not exist in the database yet
+        company: null,
+        bio: null,
+        phone: null,
+        address: null,
       };
 
       setProfile(profileData);

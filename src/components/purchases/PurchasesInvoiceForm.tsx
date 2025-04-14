@@ -26,6 +26,18 @@ interface NewInvoiceProps {
   isModal?: boolean;
 }
 
+interface InvoiceFormData {
+  supplier_id: string;
+  issue_date: string;
+  due_date: string;
+  invoice_number: string;
+  notes: string;
+  status: string;
+  subtotal: number;
+  tax_amount: number;
+  total_amount: number;
+}
+
 const EMPTY_ITEM: InvoiceItem = {
   id: '',
   description: '',
@@ -41,7 +53,7 @@ const PurchasesInvoiceForm: React.FC<NewInvoiceProps> = ({ onClose, isModal = fa
   const [isLoading, setIsLoading] = useState(false);
   const [suppliers, setSuppliers] = useState<any[]>([]);
   
-  const [invoiceData, setInvoiceData] = useState({
+  const [invoiceFormData, setInvoiceFormData] = useState<InvoiceFormData>({
     supplier_id: '',
     issue_date: new Date().toISOString().split('T')[0],
     due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -108,12 +120,12 @@ const PurchasesInvoiceForm: React.FC<NewInvoiceProps> = ({ onClose, isModal = fa
         }
         
         const invoiceNumber = `PI-${year}${month}-${String(newNumber).padStart(4, '0')}`;
-        setInvoiceData(prev => ({ ...prev, invoice_number: invoiceNumber }));
+        setInvoiceFormData(prev => ({ ...prev, invoice_number: invoiceNumber }));
       } catch (error: any) {
         console.error('Error generating invoice number:', error);
         // Fallback to a simple format
         const timestamp = Date.now();
-        setInvoiceData(prev => ({ ...prev, invoice_number: `PI-${timestamp}` }));
+        setInvoiceFormData(prev => ({ ...prev, invoice_number: `PI-${timestamp}` }));
       }
     };
     
@@ -158,7 +170,7 @@ const PurchasesInvoiceForm: React.FC<NewInvoiceProps> = ({ onClose, isModal = fa
     const taxAmount = subtotal * taxRate;
     const totalAmount = subtotal + taxAmount;
     
-    setInvoiceData(prev => ({
+    setInvoiceFormData(prev => ({
       ...prev,
       subtotal,
       tax_amount: taxAmount,
@@ -169,7 +181,7 @@ const PurchasesInvoiceForm: React.FC<NewInvoiceProps> = ({ onClose, isModal = fa
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!invoiceData.supplier_id) {
+    if (!invoiceFormData.supplier_id) {
       toast({
         variant: 'destructive',
         title: 'Validation Error',
@@ -191,19 +203,19 @@ const PurchasesInvoiceForm: React.FC<NewInvoiceProps> = ({ onClose, isModal = fa
       setIsLoading(true);
       
       // First insert the invoice
-      const { data: invoiceData, error: invoiceError } = await supabase
+      const { data: invoiceResponseData, error: invoiceError } = await supabase
         .from('supplier_invoices')
         .insert([
           {
-            supplier_id: invoiceData.supplier_id,
-            invoice_number: invoiceData.invoice_number,
-            issue_date: invoiceData.issue_date,
-            due_date: invoiceData.due_date,
-            notes: invoiceData.notes,
-            status: invoiceData.status,
-            subtotal: invoiceData.subtotal,
-            tax_amount: invoiceData.tax_amount,
-            total_amount: invoiceData.total_amount,
+            supplier_id: invoiceFormData.supplier_id,
+            invoice_number: invoiceFormData.invoice_number,
+            issue_date: invoiceFormData.issue_date,
+            due_date: invoiceFormData.due_date,
+            notes: invoiceFormData.notes,
+            status: invoiceFormData.status,
+            subtotal: invoiceFormData.subtotal,
+            tax_amount: invoiceFormData.tax_amount,
+            total_amount: invoiceFormData.total_amount,
             created_by: user?.id
           }
         ])
@@ -212,22 +224,23 @@ const PurchasesInvoiceForm: React.FC<NewInvoiceProps> = ({ onClose, isModal = fa
         
       if (invoiceError) throw invoiceError;
       
-      const invoiceId = invoiceData.id;
+      const invoiceId = invoiceResponseData.id;
       
       // Then insert all the invoice items
-      const itemsToInsert = items.map(item => ({
-        invoice_id: invoiceId,
-        description: item.description,
-        quantity: item.quantity,
-        unit_price: item.unit_price,
-        total_price: item.total_price
-      }));
-      
-      const { error: itemsError } = await supabase
-        .from('purchase_order_items') // Reusing this table for invoice items
-        .insert(itemsToInsert);
-        
-      if (itemsError) throw itemsError;
+      // Using individual insert operations instead of batch to avoid schema mismatch
+      for (const item of items) {
+        const { error: itemError } = await supabase
+          .from('purchase_order_items')
+          .insert({
+            purchase_order_id: invoiceId, // Using purchase_order_id to store invoice_id
+            description: item.description,
+            quantity: item.quantity,
+            unit_price: item.unit_price,
+            total_price: item.total_price
+          });
+          
+        if (itemError) throw itemError;
+      }
       
       toast({
         title: 'Success',
@@ -284,8 +297,8 @@ const PurchasesInvoiceForm: React.FC<NewInvoiceProps> = ({ onClose, isModal = fa
                 <div>
                   <Label htmlFor="supplier">Supplier</Label>
                   <Select 
-                    value={invoiceData.supplier_id} 
-                    onValueChange={(value) => setInvoiceData({...invoiceData, supplier_id: value})}
+                    value={invoiceFormData.supplier_id} 
+                    onValueChange={(value) => setInvoiceFormData({...invoiceFormData, supplier_id: value})}
                   >
                     <SelectTrigger id="supplier">
                       <SelectValue placeholder="Select supplier" />
@@ -304,8 +317,8 @@ const PurchasesInvoiceForm: React.FC<NewInvoiceProps> = ({ onClose, isModal = fa
                     <Input 
                       id="issue_date" 
                       type="date" 
-                      value={invoiceData.issue_date}
-                      onChange={(e) => setInvoiceData({...invoiceData, issue_date: e.target.value})}
+                      value={invoiceFormData.issue_date}
+                      onChange={(e) => setInvoiceFormData({...invoiceFormData, issue_date: e.target.value})}
                     />
                   </div>
                   <div>
@@ -313,8 +326,8 @@ const PurchasesInvoiceForm: React.FC<NewInvoiceProps> = ({ onClose, isModal = fa
                     <Input 
                       id="due_date" 
                       type="date" 
-                      value={invoiceData.due_date}
-                      onChange={(e) => setInvoiceData({...invoiceData, due_date: e.target.value})}
+                      value={invoiceFormData.due_date}
+                      onChange={(e) => setInvoiceFormData({...invoiceFormData, due_date: e.target.value})}
                     />
                   </div>
                 </div>
@@ -323,8 +336,8 @@ const PurchasesInvoiceForm: React.FC<NewInvoiceProps> = ({ onClose, isModal = fa
                   <Label htmlFor="invoice_number">Invoice Number</Label>
                   <Input 
                     id="invoice_number" 
-                    value={invoiceData.invoice_number}
-                    onChange={(e) => setInvoiceData({...invoiceData, invoice_number: e.target.value})}
+                    value={invoiceFormData.invoice_number}
+                    onChange={(e) => setInvoiceFormData({...invoiceFormData, invoice_number: e.target.value})}
                     className="bg-gray-50"
                     readOnly
                   />
@@ -333,8 +346,8 @@ const PurchasesInvoiceForm: React.FC<NewInvoiceProps> = ({ onClose, isModal = fa
                 <div>
                   <Label htmlFor="status">Status</Label>
                   <Select 
-                    value={invoiceData.status} 
-                    onValueChange={(value) => setInvoiceData({...invoiceData, status: value})}
+                    value={invoiceFormData.status} 
+                    onValueChange={(value) => setInvoiceFormData({...invoiceFormData, status: value})}
                   >
                     <SelectTrigger id="status">
                       <SelectValue placeholder="Select status" />
@@ -423,15 +436,15 @@ const PurchasesInvoiceForm: React.FC<NewInvoiceProps> = ({ onClose, isModal = fa
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Subtotal:</span>
-                      <span>${invoiceData.subtotal.toFixed(2)}</span>
+                      <span>${invoiceFormData.subtotal.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Tax (15%):</span>
-                      <span>${invoiceData.tax_amount.toFixed(2)}</span>
+                      <span>${invoiceFormData.tax_amount.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between font-medium">
                       <span>Total:</span>
-                      <span>${invoiceData.total_amount.toFixed(2)}</span>
+                      <span>${invoiceFormData.total_amount.toFixed(2)}</span>
                     </div>
                   </div>
                 </div>
@@ -441,8 +454,8 @@ const PurchasesInvoiceForm: React.FC<NewInvoiceProps> = ({ onClose, isModal = fa
                   <Textarea 
                     id="notes" 
                     placeholder="Enter any additional notes"
-                    value={invoiceData.notes}
-                    onChange={(e) => setInvoiceData({...invoiceData, notes: e.target.value})}
+                    value={invoiceFormData.notes}
+                    onChange={(e) => setInvoiceFormData({...invoiceFormData, notes: e.target.value})}
                     rows={3}
                   />
                 </div>
