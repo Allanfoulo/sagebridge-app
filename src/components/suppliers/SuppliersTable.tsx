@@ -24,15 +24,13 @@ import { Checkbox } from '@/components/ui/checkbox';
 export interface Supplier {
   id: string;
   name: string;
-  contactPerson: string;
+  contact_person?: string;
   phone?: string;
-  email: string;
+  email?: string;
   address?: string;
-  status: 'Active' | 'Inactive';
-  category: string;
-  balance: number;
-  inactiveDate?: string;
-  reason?: string;
+  is_active: boolean;
+  category?: string;
+  balance?: number;
 }
 
 interface SuppliersTableProps {
@@ -42,6 +40,7 @@ interface SuppliersTableProps {
   toggleSelectSupplier: (id: string) => void;
   requestSort: (key: string) => void;
   isActiveView: boolean;
+  isLoading?: boolean;
 }
 
 const SuppliersTable: React.FC<SuppliersTableProps> = ({
@@ -50,29 +49,40 @@ const SuppliersTable: React.FC<SuppliersTableProps> = ({
   toggleSelectAll,
   toggleSelectSupplier,
   requestSort,
-  isActiveView
+  isActiveView,
+  isLoading = false
 }) => {
   // Render status badge
-  const renderStatus = (status: string) => {
-    return status === 'Active' ? (
-      <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
-        <CheckCircle className="w-3 h-3 mr-1" />
-        Active
-      </Badge>
-    ) : (
-      <Badge variant="outline" className="bg-red-100 text-red-800 hover:bg-red-200">
-        <XCircle className="w-3 h-3 mr-1" />
-        Inactive
-      </Badge>
-    );
+  const renderStatus = (isActive: boolean) => {
+    if (isActive) {
+      return (
+        <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
+          <CheckCircle className="w-3 h-3 mr-1" />
+          Active
+        </Badge>
+      );
+    } else {
+      return (
+        <Badge variant="outline" className="bg-red-100 text-red-800 hover:bg-red-200">
+          <XCircle className="w-3 h-3 mr-1" />
+          Inactive
+        </Badge>
+      );
+    }
   };
 
-  const getRowClassName = (id: string) => {
-    if (selectedSuppliers.includes(id)) {
-      return isActiveView ? "bg-green-50" : "bg-red-50";
-    }
-    return "";
-  };
+  if (isLoading) {
+    return (
+      <TableRow>
+        <TableCell colSpan={10} className="text-center py-8">
+          <div className="flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+            <span className="ml-3">Loading suppliers...</span>
+          </div>
+        </TableCell>
+      </TableRow>
+    );
+  }
 
   return (
     <Table>
@@ -108,8 +118,6 @@ const SuppliersTable: React.FC<SuppliersTableProps> = ({
           <TableHead>Email</TableHead>
           {isActiveView && <TableHead>Location</TableHead>}
           <TableHead>Status</TableHead>
-          {!isActiveView && <TableHead>Inactive Since</TableHead>}
-          {!isActiveView && <TableHead>Reason</TableHead>}
           {isActiveView && 
             <TableHead 
               className="cursor-pointer hover:bg-muted/50"
@@ -121,22 +129,13 @@ const SuppliersTable: React.FC<SuppliersTableProps> = ({
               </div>
             </TableHead>
           }
-          <TableHead 
-            className="cursor-pointer hover:bg-muted/50"
-            onClick={() => requestSort('balance')}
-          >
-            <div className="flex items-center">
-              Balance
-              <ArrowUpDown className="ml-1 h-3 w-3" />
-            </div>
-          </TableHead>
           <TableHead className="w-[80px]">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {suppliers.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={isActiveView ? 10 : 10} className="text-center py-8 text-muted-foreground">
+            <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
               No suppliers found matching your criteria.
             </TableCell>
           </TableRow>
@@ -144,7 +143,7 @@ const SuppliersTable: React.FC<SuppliersTableProps> = ({
           suppliers.map((supplier) => (
             <TableRow 
               key={supplier.id}
-              className={getRowClassName(supplier.id)}
+              className={selectedSuppliers.includes(supplier.id) ? "bg-sage-blue/5" : ""}
             >
               <TableCell>
                 <Checkbox 
@@ -155,7 +154,7 @@ const SuppliersTable: React.FC<SuppliersTableProps> = ({
               </TableCell>
               <TableCell className="font-medium">{supplier.id}</TableCell>
               <TableCell>{supplier.name}</TableCell>
-              <TableCell>{supplier.contactPerson}</TableCell>
+              <TableCell>{supplier.contact_person}</TableCell>
               {isActiveView && <TableCell>{supplier.phone}</TableCell>}
               <TableCell>{supplier.email}</TableCell>
               {isActiveView && 
@@ -163,13 +162,8 @@ const SuppliersTable: React.FC<SuppliersTableProps> = ({
                   {supplier.address}
                 </TableCell>
               }
-              <TableCell>{renderStatus(supplier.status)}</TableCell>
-              {!isActiveView && <TableCell>{supplier.inactiveDate}</TableCell>}
-              {!isActiveView && <TableCell>{supplier.reason}</TableCell>}
+              <TableCell>{renderStatus(supplier.is_active)}</TableCell>
               {isActiveView && <TableCell>{supplier.category}</TableCell>}
-              <TableCell className="font-mono">
-                ${supplier.balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
-              </TableCell>
               <TableCell>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -181,27 +175,12 @@ const SuppliersTable: React.FC<SuppliersTableProps> = ({
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem>View Details</DropdownMenuItem>
-                    {isActiveView ? (
-                      <>
-                        <DropdownMenuItem>Edit Supplier</DropdownMenuItem>
-                        <DropdownMenuItem>View Transactions</DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-red-600">
-                          Mark as Inactive
-                        </DropdownMenuItem>
-                      </>
-                    ) : (
-                      <>
-                        <DropdownMenuItem>View Transactions</DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-green-600">
-                          Reactivate
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-600">
-                          Delete Permanently
-                        </DropdownMenuItem>
-                      </>
-                    )}
+                    <DropdownMenuItem>Edit Supplier</DropdownMenuItem>
+                    <DropdownMenuItem>View Transactions</DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem className="text-red-600">
+                      {supplier.is_active ? 'Mark as Inactive' : 'Reactivate'}
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>

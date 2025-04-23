@@ -10,77 +10,6 @@ import SupplierFilters from '@/components/suppliers/SupplierFilters';
 import SupplierPagination from '@/components/suppliers/SupplierPagination';
 import SupplierBulkActions from '@/components/suppliers/SupplierBulkActions';
 import useSuppliers from '@/hooks/useSuppliers';
-import { Supplier } from '@/components/suppliers/SuppliersTable';
-
-// Mock data for suppliers - filtered for active suppliers only
-const supplierData: Supplier[] = [
-  {
-    id: 'SP001',
-    name: 'Tech Solutions Inc.',
-    contactPerson: 'John Smith',
-    phone: '(555) 123-4567',
-    email: 'john@techsolutions.com',
-    address: '123 Tech Lane, Silicon Valley, CA',
-    status: 'Active', // Now using the literal 'Active' type
-    category: 'Technology',
-    balance: 12500.00
-  },
-  {
-    id: 'SP002',
-    name: 'Office Supplies Co.',
-    contactPerson: 'Sarah Johnson',
-    phone: '(555) 234-5678',
-    email: 'sarah@officesupplies.com',
-    address: '456 Supply Road, Chicago, IL',
-    status: 'Active',
-    category: 'Office Supplies',
-    balance: 3750.50
-  },
-  {
-    id: 'SP004',
-    name: 'Fresh Foods Distributors',
-    contactPerson: 'Emily Rodriguez',
-    phone: '(555) 456-7890',
-    email: 'emily@freshfoods.com',
-    address: '101 Produce Lane, Farmington, OR',
-    status: 'Active',
-    category: 'Food & Beverage',
-    balance: 6300.25
-  },
-  {
-    id: 'SP005',
-    name: 'Industrial Parts Ltd.',
-    contactPerson: 'Robert Kim',
-    phone: '(555) 567-8901',
-    email: 'robert@industrialparts.com',
-    address: '202 Factory Road, Detroit, MI',
-    status: 'Active',
-    category: 'Manufacturing',
-    balance: 15700.80
-  },
-  {
-    id: 'SP007',
-    name: 'Construction Experts Inc.',
-    contactPerson: 'David Wilson',
-    phone: '(555) 789-0123',
-    email: 'david@constructionexperts.com',
-    address: '404 Builder Street, Phoenix, AZ',
-    status: 'Active',
-    category: 'Construction',
-    balance: 22300.60
-  },
-  {
-    id: 'SP008',
-    name: 'Medical Supplies Co.',
-    contactPerson: 'Lisa Brown',
-    phone: '(555) 890-1234',
-    email: 'lisa@medicalsupplies.com',
-    address: '505 Health Drive, Boston, MA',
-    status: 'Active',
-    category: 'Healthcare',
-    balance: 9800.40
-  }
-];
 
 const ActiveSuppliers = () => {
   const navigate = useNavigate();
@@ -99,8 +28,12 @@ const ActiveSuppliers = () => {
     itemsPerPage,
     totalPages,
     uniqueCategories,
-    filteredSuppliers
-  } = useSuppliers({ initialData: supplierData });
+    filteredSuppliers,
+    isLoading
+  } = useSuppliers();
+
+  // Filter for active suppliers only
+  const activeSuppliers = paginatedSuppliers.filter(supplier => supplier.is_active);
 
   return (
     <MainLayout>
@@ -154,12 +87,13 @@ const ActiveSuppliers = () => {
         {/* Suppliers Table */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <SuppliersTable
-            suppliers={paginatedSuppliers}
+            suppliers={activeSuppliers}
             selectedSuppliers={selectedSuppliers}
             toggleSelectAll={toggleSelectAll}
             toggleSelectSupplier={toggleSelectSupplier}
             requestSort={requestSort}
             isActiveView={true}
+            isLoading={isLoading}
           />
 
           {/* Pagination */}

@@ -1,12 +1,23 @@
 
-import { useState } from 'react';
-import { Supplier } from '@/components/suppliers/SuppliersTable';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
-interface UseSupplierProps {
-  initialData: Supplier[];
+export interface Supplier {
+  id: string;
+  name: string;
+  contact_person?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  status: 'Active' | 'Inactive';
+  category?: string;
+  balance?: number;
+  created_at: string;
+  is_active: boolean;
 }
 
-const useSuppliers = ({ initialData }: UseSupplierProps) => {
+const useSuppliers = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
@@ -15,9 +26,41 @@ const useSuppliers = ({ initialData }: UseSupplierProps) => {
     key: string;
     direction: 'ascending' | 'descending' | null;
   }>({ key: 'name', direction: null });
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchSuppliers();
+  }, []);
+
+  const fetchSuppliers = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('suppliers')
+        .select('*')
+        .order('name', { ascending: true });
+
+      if (error) {
+        throw error;
+      }
+
+      setSuppliers(data || []);
+    } catch (error: any) {
+      console.error('Error fetching suppliers:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load suppliers. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Filter suppliers based on search and category
-  const filteredSuppliers = initialData.filter(supplier => {
+  const filteredSuppliers = suppliers.filter(supplier => {
     const matchesSearch = searchTerm === '' || 
       Object.values(supplier).some(value => 
         String(value).toLowerCase().includes(searchTerm.toLowerCase())
@@ -85,7 +128,7 @@ const useSuppliers = ({ initialData }: UseSupplierProps) => {
   };
 
   // Extract unique categories from the data
-  const uniqueCategories = Array.from(new Set(initialData.map(supplier => supplier.category)));
+  const uniqueCategories = Array.from(new Set(suppliers.map(supplier => supplier.category).filter(Boolean)));
 
   return {
     searchTerm,
@@ -105,8 +148,11 @@ const useSuppliers = ({ initialData }: UseSupplierProps) => {
     toggleSelectSupplier,
     itemsPerPage,
     totalPages,
-    uniqueCategories
+    uniqueCategories,
+    isLoading,
+    refetch: fetchSuppliers
   };
 };
 
 export default useSuppliers;
+
