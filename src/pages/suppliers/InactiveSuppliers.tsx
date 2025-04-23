@@ -9,61 +9,61 @@ import SupplierFilters from '@/components/suppliers/SupplierFilters';
 import SupplierPagination from '@/components/suppliers/SupplierPagination';
 import SupplierBulkActions from '@/components/suppliers/SupplierBulkActions';
 import useSuppliers from '@/hooks/useSuppliers';
-import { Supplier } from '@/components/suppliers/SuppliersTable';
+import { Supplier } from '@/hooks/useSuppliers';
 
 // Mock data for inactive suppliers
 const supplierData: Supplier[] = [
   {
     id: 'SP003',
     name: 'Global Shipping LLC',
-    contactPerson: 'Michael Chen',
+    contact_person: 'Michael Chen',
     phone: '(555) 345-6789',
     email: 'michael@globalshipping.com',
     address: '789 Harbor Blvd, Port City, TX',
-    status: 'Inactive', // Now using the literal 'Inactive' type
+    status: 'Inactive',
     category: 'Logistics',
     balance: 8200.75,
-    inactiveDate: '2024-01-15',
-    reason: 'Contract expired'
+    created_at: '2023-12-15T00:00:00Z',
+    is_active: false
   },
   {
     id: 'SP006',
     name: 'Creative Designs Agency',
-    contactPerson: 'Amanda Lee',
+    contact_person: 'Amanda Lee',
     phone: '(555) 678-9012',
     email: 'amanda@creativedesigns.com',
     address: '303 Art Avenue, Brooklyn, NY',
     status: 'Inactive',
     category: 'Services',
     balance: 4200.30,
-    inactiveDate: '2024-02-28',
-    reason: 'Poor service quality'
+    created_at: '2023-12-15T00:00:00Z',
+    is_active: false
   },
   {
     id: 'SP009',
     name: 'Electronics Wholesale Corp.',
-    contactPerson: 'Kevin Zhang',
+    contact_person: 'Kevin Zhang',
     phone: '(555) 234-5678',
     email: 'kevin@electronicswhsl.com',
     address: '123 Circuit Ave, San Jose, CA',
     status: 'Inactive',
     category: 'Technology',
     balance: 7850.25,
-    inactiveDate: '2023-11-10',
-    reason: 'Vendor consolidation'
+    created_at: '2023-11-10T00:00:00Z',
+    is_active: false
   },
   {
     id: 'SP012',
     name: 'Furniture Depot Ltd.',
-    contactPerson: 'Jessica Taylor',
+    contact_person: 'Jessica Taylor',
     phone: '(555) 345-6789',
     email: 'jessica@furnituredepot.com',
     address: '456 Chair Street, Grand Rapids, MI',
     status: 'Inactive',
     category: 'Office Supplies',
     balance: 2340.60,
-    inactiveDate: '2024-03-01',
-    reason: 'Business closed'
+    created_at: '2024-03-01T00:00:00Z',
+    is_active: false
   }
 ];
 
@@ -85,7 +85,10 @@ const InactiveSuppliers = () => {
     totalPages,
     uniqueCategories,
     filteredSuppliers
-  } = useSuppliers({ initialData: supplierData });
+  } = useSuppliers();
+
+  // Use mock data for inactive suppliers - in a real app we'd filter from the database
+  const inactiveSuppliers = supplierData.filter(supplier => !supplier.is_active);
 
   return (
     <MainLayout>
@@ -132,7 +135,7 @@ const InactiveSuppliers = () => {
         {/* Suppliers Table */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <SuppliersTable
-            suppliers={paginatedSuppliers}
+            suppliers={inactiveSuppliers}
             selectedSuppliers={selectedSuppliers}
             toggleSelectAll={toggleSelectAll}
             toggleSelectSupplier={toggleSelectSupplier}

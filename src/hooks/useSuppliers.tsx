@@ -10,11 +10,12 @@ export interface Supplier {
   phone?: string;
   email?: string;
   address?: string;
-  status: 'Active' | 'Inactive';
-  category?: string;
+  category?: string; // Derived from category_id
+  category_id?: string; // From database
   balance?: number;
   created_at: string;
   is_active: boolean;
+  status?: 'Active' | 'Inactive'; // Virtual property derived from is_active
 }
 
 const useSuppliers = () => {
@@ -46,7 +47,14 @@ const useSuppliers = () => {
         throw error;
       }
 
-      setSuppliers(data || []);
+      // Map database results to Supplier interface with virtual status property
+      const mappedSuppliers = data?.map(supplier => ({
+        ...supplier,
+        status: supplier.is_active ? 'Active' : 'Inactive',
+        category: supplier.category_id // In a real app, we'd fetch category names
+      })) || [];
+
+      setSuppliers(mappedSuppliers);
     } catch (error: any) {
       console.error('Error fetching suppliers:', error);
       toast({
@@ -155,4 +163,3 @@ const useSuppliers = () => {
 };
 
 export default useSuppliers;
-

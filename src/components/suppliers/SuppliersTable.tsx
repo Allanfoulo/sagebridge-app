@@ -20,18 +20,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-
-export interface Supplier {
-  id: string;
-  name: string;
-  contact_person?: string;
-  phone?: string;
-  email?: string;
-  address?: string;
-  is_active: boolean;
-  category?: string;
-  balance?: number;
-}
+import { Supplier } from '@/hooks/useSuppliers';
 
 interface SuppliersTableProps {
   suppliers: Supplier[];
