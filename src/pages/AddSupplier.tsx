@@ -57,8 +57,8 @@ const AddSupplier = () => {
       phone: '',
       address: '',
       taxId: '',
-      category: '',
-      paymentTerms: '',
+      category: 'placeholder',
+      paymentTerms: 'placeholder',
       notes: '',
     },
   });
@@ -74,10 +74,10 @@ const AddSupplier = () => {
         phone: data.phone,
         address: data.address,
         tax_id: data.taxId || null,
-        payment_terms: data.paymentTerms,
+        payment_terms: data.paymentTerms !== 'placeholder' ? data.paymentTerms : null,
         notes: data.notes || null,
-        // Only set category_id if a non-empty, non-'other' value is selected
-        category_id: data.category && data.category !== 'other' ? data.category : null,
+        // Only set category_id if a valid category value is selected
+        category_id: data.category && !['placeholder', 'other'].includes(data.category) ? data.category : null,
         is_active: true
       };
       
