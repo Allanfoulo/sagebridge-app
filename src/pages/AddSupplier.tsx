@@ -51,32 +51,32 @@ const AddSupplier = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        setIsLoading(true);
-        const { data, error } = await supabase
-          .from('supplier_categories')
-          .select('*');
+  const fetchCategories = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('supplier_categories')
+        .select('*');
 
-        if (error) {
-          throw error;
-        }
-
-        console.log('Fetched categories:', data);
-        setCategories(data || []);
-      } catch (error: any) {
-        console.error('Error fetching categories:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load supplier categories.",
-          variant: "destructive"
-        });
-      } finally {
-        setIsLoading(false);
+      if (error) {
+        throw error;
       }
-    };
 
+      console.log('Fetched categories:', data);
+      setCategories(data || []);
+    } catch (error: any) {
+      console.error('Error fetching categories:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load supplier categories.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  useEffect(() => {
     fetchCategories();
   }, [toast]);
   
