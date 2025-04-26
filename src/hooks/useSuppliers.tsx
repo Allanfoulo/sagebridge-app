@@ -50,7 +50,7 @@ const useSuppliers = () => {
       // Map database results to Supplier interface with virtual status property
       const mappedSuppliers = data?.map(supplier => ({
         ...supplier,
-        status: supplier.is_active ? 'Active' : 'Inactive',
+        status: supplier.is_active ? 'Active' as const : 'Inactive' as const,
         category: supplier.category_id // In a real app, we'd fetch category names
       })) || [];
 
