@@ -22,28 +22,28 @@ const UnpaidInvoices: React.FC = () => {
   // Get export utilities
   const { exportToCSV, exportToExcel, handleImport } = useSalesExport();
   
-  useEffect(() => {
-    const loadInvoices = async () => {
-      setIsLoading(true);
-      try {
-        const result = await fetchFilteredInvoices('Pending');
-        if (result.success) {
-          setInvoices(result.invoices);
-        } else {
-          console.error("Error fetching invoices:", result.error);
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Failed to load invoices. Please try again.",
-          });
-        }
-      } catch (error) {
-        console.error("Error:", error);
-      } finally {
-        setIsLoading(false);
+  const loadInvoices = async () => {
+    setIsLoading(true);
+    try {
+      const result = await fetchFilteredInvoices('Pending');
+      if (result.success) {
+        setInvoices(result.invoices);
+      } else {
+        console.error("Error fetching invoices:", result.error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load invoices. Please try again.",
+        });
       }
-    };
+    } catch (error) {
+      console.error("Error:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     loadInvoices();
   }, [toast]);
 
@@ -88,7 +88,7 @@ const UnpaidInvoices: React.FC = () => {
                 filteredInvoices={filteredInvoices} 
                 isLoading={isLoading} 
                 searchQuery={searchQuery} 
-                onStatusUpdate={() => loadInvoices()}
+                onStatusUpdate={loadInvoices}
               />
             </CardContent>
           </Card>
