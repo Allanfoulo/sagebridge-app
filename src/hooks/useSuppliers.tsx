@@ -53,6 +53,7 @@ const useSuppliers = () => {
         throw error;
       }
 
+      console.log("Fetched categories:", data);
       setCategories(data || []);
     } catch (error: any) {
       console.error('Error fetching categories:', error);

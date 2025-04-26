@@ -63,6 +63,7 @@ const AddSupplier = () => {
           throw error;
         }
 
+        console.log('Fetched categories:', data);
         setCategories(data || []);
       } catch (error: any) {
         console.error('Error fetching categories:', error);
@@ -88,8 +89,8 @@ const AddSupplier = () => {
       phone: '',
       address: '',
       taxId: '',
-      category: 'placeholder',
-      paymentTerms: 'placeholder',
+      category: '',
+      paymentTerms: '',
       notes: '',
     },
   });
@@ -101,6 +102,7 @@ const AddSupplier = () => {
       // Prepare data for insertion
       const supplierData = {
         name: data.companyName,
+        contact_person: data.contactPerson,
         email: data.email,
         phone: data.phone,
         address: data.address,
@@ -292,14 +294,18 @@ const AddSupplier = () => {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-gray-700">Category</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger className="border-gray-200 focus:ring-sage-blue/20">
                                 <SelectValue placeholder="Select category" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="placeholder">Select a category</SelectItem>
+                              {categories.length === 0 && (
+                                <SelectItem value="placeholder" disabled>
+                                  No categories available
+                                </SelectItem>
+                              )}
                               {categories.map((category) => (
                                 <SelectItem key={category.id} value={category.id}>
                                   {category.name}
@@ -318,14 +324,13 @@ const AddSupplier = () => {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-gray-700">Payment Terms</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger className="border-gray-200 focus:ring-sage-blue/20">
                                 <SelectValue placeholder="Select payment terms" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="placeholder">Select payment terms</SelectItem>
                               <SelectItem value="net-30">Net 30</SelectItem>
                               <SelectItem value="net-45">Net 45</SelectItem>
                               <SelectItem value="net-60">Net 60</SelectItem>
