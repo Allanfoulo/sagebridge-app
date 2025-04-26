@@ -1,6 +1,15 @@
 
-import React from 'react';
-import { Loader2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Loader2, Check, Clock, X } from 'lucide-react';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
+import { updateInvoiceStatus } from '@/utils/salesInvoiceService';
 
 interface Invoice {
   id: string;
@@ -16,14 +25,65 @@ interface InvoiceTableProps {
   filteredInvoices: Invoice[];
   isLoading: boolean;
   searchQuery: string;
+  onStatusUpdate?: () => void;
 }
 
 const InvoiceTable: React.FC<InvoiceTableProps> = ({ 
   invoices, 
   filteredInvoices, 
   isLoading, 
-  searchQuery 
+  searchQuery,
+  onStatusUpdate 
 }) => {
+  const { toast } = useToast();
+  const [updatingInvoice, setUpdatingInvoice] = useState<string | null>(null);
+
+  const handleStatusChange = async (invoiceId: string, newStatus: string) => {
+    setUpdatingInvoice(invoiceId);
+    try {
+      const result = await updateInvoiceStatus(invoiceId, newStatus);
+      if (result.success) {
+        toast({
+          title: "Status updated",
+          description: `Invoice status changed to ${newStatus}`,
+        });
+        if (onStatusUpdate) {
+          onStatusUpdate();
+        }
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Update failed",
+          description: result.error || "Failed to update invoice status",
+        });
+      }
+    } catch (error) {
+      console.error("Error updating invoice status:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "An unexpected error occurred",
+      });
+    } finally {
+      setUpdatingInvoice(null);
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'Paid':
+        return <Check className="h-4 w-4 text-green-600" />;
+      case 'Pending':
+        return <X className="h-4 w-4 text-yellow-600" />;
+      case 'Overdue':
+        return <Clock className="h-4 w-4 text-red-600" />;
+      case 'Draft':
+        return <span className="h-4 w-4 rounded-full bg-blue-200"></span>;
+      default:
+        return null;
+    }
+  };
+
   return (
     <>
       {isLoading ? (
@@ -58,6 +118,7 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({
                         invoice.status === 'Draft' ? 'bg-blue-100 text-blue-800' :
                         'bg-red-100 text-red-800'
                       }`}>
+                        <span className="mr-1">{getStatusIcon(invoice.status)}</span>
                         {invoice.status}
                       </span>
                     </td>
@@ -65,6 +126,51 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({
                       <div className="flex gap-2">
                         <button className="text-primary-500 hover:text-primary-600">View</button>
                         <button className="text-primary-500 hover:text-primary-600">Edit</button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 px-2 text-primary-500 hover:text-primary-600">
+                              {updatingInvoice === invoice.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                "Status"
+                              )}
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem 
+                              onClick={() => handleStatusChange(invoice.id, 'Paid')}
+                              disabled={invoice.status === 'Paid' || updatingInvoice === invoice.id}
+                              className="flex items-center gap-2"
+                            >
+                              <Check className="h-4 w-4 text-green-600" />
+                              <span>Mark as Paid</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleStatusChange(invoice.id, 'Pending')}
+                              disabled={invoice.status === 'Pending' || updatingInvoice === invoice.id}
+                              className="flex items-center gap-2"
+                            >
+                              <X className="h-4 w-4 text-yellow-600" />
+                              <span>Mark as Unpaid</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleStatusChange(invoice.id, 'Overdue')}
+                              disabled={invoice.status === 'Overdue' || updatingInvoice === invoice.id}
+                              className="flex items-center gap-2"
+                            >
+                              <Clock className="h-4 w-4 text-red-600" />
+                              <span>Mark as Overdue</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleStatusChange(invoice.id, 'Draft')}
+                              disabled={invoice.status === 'Draft' || updatingInvoice === invoice.id}
+                              className="flex items-center gap-2"
+                            >
+                              <span className="h-4 w-4 rounded-full bg-blue-200"></span>
+                              <span>Mark as Draft</span>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </td>
                   </tr>

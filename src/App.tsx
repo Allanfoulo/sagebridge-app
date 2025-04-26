@@ -16,6 +16,9 @@ import Auth from "./pages/Auth";
 import Sales from "./pages/Sales";
 import NewInvoice from "./pages/sales/NewInvoice";
 import NewQuote from "./pages/sales/NewQuote";
+import PaidInvoices from "./pages/sales/PaidInvoices";
+import UnpaidInvoices from "./pages/sales/UnpaidInvoices";
+import OverdueInvoices from "./pages/sales/OverdueInvoices";
 import Purchases from "./pages/Purchases";
 import Banking from "./pages/Banking";
 import Reports from "./pages/Reports";
@@ -132,7 +135,6 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate checking app initialization
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 1000);
@@ -164,6 +166,9 @@ const App = () => {
                       <Route path="/sales" element={<ProtectedRoute><Sales /></ProtectedRoute>} />
                       <Route path="/sales/new-invoice" element={<ProtectedRoute><NewInvoice /></ProtectedRoute>} />
                       <Route path="/sales/new-quote" element={<ProtectedRoute><NewQuote /></ProtectedRoute>} />
+                      <Route path="/sales/paid-invoices" element={<ProtectedRoute><PaidInvoices /></ProtectedRoute>} />
+                      <Route path="/sales/unpaid-invoices" element={<ProtectedRoute><UnpaidInvoices /></ProtectedRoute>} />
+                      <Route path="/sales/overdue-invoices" element={<ProtectedRoute><OverdueInvoices /></ProtectedRoute>} />
                       <Route path="/purchases" element={<ProtectedRoute><Purchases /></ProtectedRoute>} />
                       <Route path="/purchases/new-invoice" element={<ProtectedRoute><NewPurchaseInvoice /></ProtectedRoute>} />
                       <Route path="/banking" element={<ProtectedRoute><Banking /></ProtectedRoute>} />

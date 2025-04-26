@@ -134,6 +134,58 @@ export const fetchInvoices = async () => {
   }
 };
 
+export const fetchFilteredInvoices = async (status: string) => {
+  try {
+    // Fetch invoices with customer details filtered by status
+    const { data: invoices, error } = await supabase
+      .from('sales_invoices')
+      .select(`
+        id, 
+        invoice_number, 
+        invoice_date, 
+        status, 
+        total, 
+        currency,
+        customers(name)
+      `)
+      .eq('status', status)
+      .order('invoice_date', { ascending: false });
+    
+    if (error) throw error;
+    
+    return { 
+      success: true, 
+      invoices: invoices.map(invoice => ({
+        id: invoice.id,
+        invoiceNumber: invoice.invoice_number,
+        customer: invoice.customers?.name || 'Unknown Customer',
+        date: invoice.invoice_date,
+        amount: `${getCurrencySymbol(invoice.currency)}${invoice.total.toFixed(2)}`,
+        status: invoice.status
+      }))
+    };
+  } catch (error) {
+    console.error(`Error fetching ${status} invoices:`, error);
+    return { success: false, error };
+  }
+};
+
+export const updateInvoiceStatus = async (invoiceId: string, newStatus: string) => {
+  try {
+    const { error } = await supabase
+      .from('sales_invoices')
+      .update({ status: newStatus })
+      .eq('id', invoiceId);
+    
+    if (error) throw error;
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error updating invoice status:', error);
+    return { success: false, error };
+  }
+};
+
 export const getCurrencySymbol = (currency: string) => {
   switch (currency) {
     case 'ZAR':

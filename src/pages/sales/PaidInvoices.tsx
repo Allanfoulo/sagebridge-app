@@ -4,7 +4,7 @@ import MainLayout from '@/components/layout/MainLayout';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { fetchInvoices } from '@/utils/salesInvoiceService';
+import { fetchFilteredInvoices } from '@/utils/salesInvoiceService';
 
 // Import our components
 import SalesHeader from '@/components/sales/SalesHeader';
@@ -13,46 +13,37 @@ import InvoiceListHeader from '@/components/sales/InvoiceListHeader';
 import InvoiceTable from '@/components/sales/InvoiceTable';
 import { useSalesExport } from '@/components/sales/SalesExportUtils';
 
-interface Invoice {
-  id: string;
-  invoiceNumber: string;
-  customer: string;
-  date: string;
-  amount: string;
-  status: string;
-}
-
-const Sales: React.FC = () => {
+const PaidInvoices: React.FC = () => {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [invoices, setInvoices] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   
   // Get export utilities
   const { exportToCSV, exportToExcel, handleImport } = useSalesExport();
   
-  const loadInvoices = async () => {
-    setIsLoading(true);
-    try {
-      const result = await fetchInvoices();
-      if (result.success) {
-        setInvoices(result.invoices);
-      } else {
-        console.error("Error fetching invoices:", result.error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to load invoices. Please try again.",
-        });
-      }
-    } catch (error) {
-      console.error("Error:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
+    const loadInvoices = async () => {
+      setIsLoading(true);
+      try {
+        const result = await fetchFilteredInvoices('Paid');
+        if (result.success) {
+          setInvoices(result.invoices);
+        } else {
+          console.error("Error fetching invoices:", result.error);
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to load invoices. Please try again.",
+          });
+        }
+      } catch (error) {
+        console.error("Error:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     loadInvoices();
   }, [toast]);
 
@@ -87,8 +78,8 @@ const Sales: React.FC = () => {
             <CardHeader className="pb-0">
               <InvoiceListHeader 
                 searchQuery={searchQuery} 
-                setSearchQuery={setSearchQuery} 
-                title="All Invoices"
+                setSearchQuery={setSearchQuery}
+                title="Paid Invoices"
               />
             </CardHeader>
             <CardContent>
@@ -96,8 +87,8 @@ const Sales: React.FC = () => {
                 invoices={invoices} 
                 filteredInvoices={filteredInvoices} 
                 isLoading={isLoading} 
-                searchQuery={searchQuery}
-                onStatusUpdate={loadInvoices}
+                searchQuery={searchQuery} 
+                onStatusUpdate={() => loadInvoices()}
               />
             </CardContent>
           </Card>
@@ -107,4 +98,4 @@ const Sales: React.FC = () => {
   );
 };
 
-export default Sales;
+export default PaidInvoices;

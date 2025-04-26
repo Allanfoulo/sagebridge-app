@@ -3,10 +3,11 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FilePlus, Users } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const SalesDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   
   const navigateToNewInvoice = () => {
     navigate('/sales/new-invoice');
@@ -18,6 +19,11 @@ const SalesDashboard: React.FC = () => {
 
   const navigateToCustomers = () => {
     navigate('/customers');
+  };
+
+  // Helper function to check if a route is active
+  const isActive = (path: string) => {
+    return location.pathname === path;
   };
 
   return (
@@ -53,16 +59,28 @@ const SalesDashboard: React.FC = () => {
         <div className="pt-4 border-t border-sage-lightGray">
           <h4 className="font-medium text-sm mb-3">Quick Filters</h4>
           <div className="space-y-2">
-            <button className="bg-sage-lightGray hover:bg-primary-50 text-sage-darkGray w-full py-2 px-4 rounded-md text-sm transition-colors text-left">
+            <button 
+              onClick={() => navigate('/sales')}
+              className={`${isActive('/sales') ? 'bg-sage-lightGray' : ''} hover:bg-primary-50 text-sage-darkGray w-full py-2 px-4 rounded-md text-sm transition-colors text-left`}
+            >
               All Invoices
             </button>
-            <button className="hover:bg-primary-50 text-sage-darkGray w-full py-2 px-4 rounded-md text-sm transition-colors text-left">
+            <button 
+              onClick={() => navigate('/sales/paid-invoices')}
+              className={`${isActive('/sales/paid-invoices') ? 'bg-sage-lightGray' : ''} hover:bg-primary-50 text-sage-darkGray w-full py-2 px-4 rounded-md text-sm transition-colors text-left`}
+            >
               Paid
             </button>
-            <button className="hover:bg-primary-50 text-sage-darkGray w-full py-2 px-4 rounded-md text-sm transition-colors text-left">
+            <button 
+              onClick={() => navigate('/sales/unpaid-invoices')}
+              className={`${isActive('/sales/unpaid-invoices') ? 'bg-sage-lightGray' : ''} hover:bg-primary-50 text-sage-darkGray w-full py-2 px-4 rounded-md text-sm transition-colors text-left`}
+            >
               Unpaid
             </button>
-            <button className="hover:bg-primary-50 text-sage-darkGray w-full py-2 px-4 rounded-md text-sm transition-colors text-left">
+            <button 
+              onClick={() => navigate('/sales/overdue-invoices')}
+              className={`${isActive('/sales/overdue-invoices') ? 'bg-sage-lightGray' : ''} hover:bg-primary-50 text-sage-darkGray w-full py-2 px-4 rounded-md text-sm transition-colors text-left`}
+            >
               Overdue
             </button>
           </div>

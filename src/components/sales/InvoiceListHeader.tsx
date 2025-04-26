@@ -6,15 +6,17 @@ import { ListFilter } from 'lucide-react';
 interface InvoiceListHeaderProps {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
+  title?: string;
 }
 
 const InvoiceListHeader: React.FC<InvoiceListHeaderProps> = ({ 
   searchQuery, 
-  setSearchQuery 
+  setSearchQuery,
+  title = "Invoices"
 }) => {
   return (
     <div className="flex justify-between items-center">
-      <CardTitle className="text-base">Invoices</CardTitle>
+      <CardTitle className="text-base">{title}</CardTitle>
       <div className="flex gap-2">
         <div className="relative">
           <input 
