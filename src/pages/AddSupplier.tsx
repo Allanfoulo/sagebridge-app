@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
@@ -29,6 +28,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Category } from '@/hooks/useSuppliers';
+import CategoryManagement from '@/components/suppliers/CategoryManagement';
 
 const supplierFormSchema = z.object({
   companyName: z.string().min(2, 'Company name must be at least 2 characters'),
@@ -294,25 +294,30 @@ const AddSupplier = () => {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-gray-700">Category</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger className="border-gray-200 focus:ring-sage-blue/20">
-                                <SelectValue placeholder="Select category" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {categories.length === 0 && (
-                                <SelectItem value="placeholder" disabled>
-                                  No categories available
-                                </SelectItem>
-                              )}
-                              {categories.map((category) => (
-                                <SelectItem key={category.id} value={category.id}>
-                                  {category.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <div className="flex gap-2 items-start">
+                            <div className="flex-1">
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl>
+                                  <SelectTrigger className="border-gray-200 focus:ring-sage-blue/20">
+                                    <SelectValue placeholder="Select category" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {categories.length === 0 && (
+                                    <SelectItem value="placeholder" disabled>
+                                      No categories available
+                                    </SelectItem>
+                                  )}
+                                  {categories.map((category) => (
+                                    <SelectItem key={category.id} value={category.id}>
+                                      {category.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <CategoryManagement onCategoryAdded={() => fetchCategories()} />
+                          </div>
                           <FormMessage />
                         </FormItem>
                       )}
