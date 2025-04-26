@@ -11,11 +11,17 @@ export interface Supplier {
   email?: string;
   address?: string;
   category?: string; // Derived from category_id
-  category_id?: string; // From database
+  category_id?: string | null; // From database
   balance?: number;
   created_at: string;
   is_active: boolean;
-  status?: 'Active' | 'Inactive'; // Virtual property derived from is_active
+  status: 'Active' | 'Inactive'; // Virtual property derived from is_active
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  description?: string;
 }
 
 const useSuppliers = () => {
@@ -28,33 +34,77 @@ const useSuppliers = () => {
     direction: 'ascending' | 'descending' | null;
   }>({ key: 'name', direction: null });
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchSuppliers();
+    fetchCategories();
   }, []);
 
-  const fetchSuppliers = async () => {
+  const fetchCategories = async () => {
     try {
-      setIsLoading(true);
       const { data, error } = await supabase
-        .from('suppliers')
-        .select('*')
-        .order('name', { ascending: true });
+        .from('supplier_categories')
+        .select('*');
 
       if (error) {
         throw error;
       }
 
+      setCategories(data || []);
+    } catch (error: any) {
+      console.error('Error fetching categories:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load supplier categories.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const fetchSuppliers = async () => {
+    try {
+      setIsLoading(true);
+      
+      // First fetch the supplier categories
+      const { data: categoriesData, error: categoriesError } = await supabase
+        .from('supplier_categories')
+        .select('*');
+        
+      if (categoriesError) {
+        throw categoriesError;
+      }
+      
+      // Then fetch suppliers
+      const { data: suppliersData, error: suppliersError } = await supabase
+        .from('suppliers')
+        .select('*')
+        .order('name', { ascending: true });
+
+      if (suppliersError) {
+        throw suppliersError;
+      }
+
+      // Create a map of category_id to category name for easier lookup
+      const categoryMap = new Map();
+      categoriesData?.forEach(category => {
+        categoryMap.set(category.id, category.name);
+      });
+
       // Map database results to Supplier interface with virtual status property
-      const mappedSuppliers = data?.map(supplier => ({
+      const mappedSuppliers = suppliersData?.map(supplier => ({
         ...supplier,
         status: supplier.is_active ? 'Active' as const : 'Inactive' as const,
-        category: supplier.category_id // In a real app, we'd fetch category names
+        // Use the categoryMap to get the category name based on category_id
+        category: supplier.category_id && categoryMap.has(supplier.category_id) 
+          ? categoryMap.get(supplier.category_id) 
+          : undefined
       })) || [];
 
       setSuppliers(mappedSuppliers);
+      setCategories(categoriesData || []);
     } catch (error: any) {
       console.error('Error fetching suppliers:', error);
       toast({
@@ -158,7 +208,8 @@ const useSuppliers = () => {
     totalPages,
     uniqueCategories,
     isLoading,
-    refetch: fetchSuppliers
+    refetch: fetchSuppliers,
+    categories // Return the categories list
   };
 };
 

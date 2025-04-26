@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -28,6 +28,7 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { Category } from '@/hooks/useSuppliers';
 
 const supplierFormSchema = z.object({
   companyName: z.string().min(2, 'Company name must be at least 2 characters'),
@@ -47,6 +48,36 @@ const AddSupplier = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setIsLoading(true);
+        const { data, error } = await supabase
+          .from('supplier_categories')
+          .select('*');
+
+        if (error) {
+          throw error;
+        }
+
+        setCategories(data || []);
+      } catch (error: any) {
+        console.error('Error fetching categories:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load supplier categories.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, [toast]);
   
   const form = useForm<SupplierFormValues>({
     resolver: zodResolver(supplierFormSchema),
@@ -76,10 +107,13 @@ const AddSupplier = () => {
         tax_id: data.taxId || null,
         payment_terms: data.paymentTerms !== 'placeholder' ? data.paymentTerms : null,
         notes: data.notes || null,
-        // Only set category_id if a valid category value is selected
-        category_id: data.category && !['placeholder', 'other'].includes(data.category) ? data.category : null,
+        // Only set category_id if a valid UUID is selected 
+        // (not placeholder or other non-UUID values)
+        category_id: data.category && data.category !== 'placeholder' ? data.category : null,
         is_active: true
       };
+      
+      console.log("Submitting supplier data:", supplierData);
       
       // Insert data into the suppliers table
       const { data: newSupplier, error } = await supabase
@@ -266,11 +300,11 @@ const AddSupplier = () => {
                             </FormControl>
                             <SelectContent>
                               <SelectItem value="placeholder">Select a category</SelectItem>
-                              <SelectItem value="raw-materials">Raw Materials</SelectItem>
-                              <SelectItem value="equipment">Equipment</SelectItem>
-                              <SelectItem value="services">Services</SelectItem>
-                              <SelectItem value="office-supplies">Office Supplies</SelectItem>
-                              <SelectItem value="other">Other</SelectItem>
+                              {categories.map((category) => (
+                                <SelectItem key={category.id} value={category.id}>
+                                  {category.name}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                           <FormMessage />
