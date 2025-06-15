@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, FileText, Download, Filter, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -22,17 +22,17 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
-const purchaseOrders = [
-  { id: 'PO-2023-001', supplier: 'Tech Solutions Inc.', date: '2023-06-15', total: 5624.99, status: 'Completed' },
-  { id: 'PO-2023-002', supplier: 'Office Supplies Co.', date: '2023-06-18', total: 1287.50, status: 'Pending' },
-  { id: 'PO-2023-003', supplier: 'Furniture Depot', date: '2023-06-20', total: 8745.00, status: 'Processing' },
-  { id: 'PO-2023-004', supplier: 'Electronics Warehouse', date: '2023-06-22', total: 3456.78, status: 'Completed' },
-  { id: 'PO-2023-005', supplier: 'Industrial Parts Ltd.', date: '2023-06-25', total: 12589.99, status: 'Pending' },
-  { id: 'PO-2023-006', supplier: 'Building Materials Inc.', date: '2023-06-28', total: 6543.21, status: 'Processing' },
-  { id: 'PO-2023-007', supplier: 'Tech Solutions Inc.', date: '2023-07-01', total: 2345.67, status: 'Completed' },
-  { id: 'PO-2023-008', supplier: 'Office Supplies Co.', date: '2023-07-05', total: 876.54, status: 'Processing' },
-];
+interface PurchaseOrder {
+  id: string;
+  order_number: string;
+  supplier_name: string;
+  issue_date: string;
+  total_amount: number;
+  status: string;
+}
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -49,6 +49,118 @@ const getStatusColor = (status: string) => {
 
 const PurchaseOrders = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
+  const [filteredOrders, setFilteredOrders] = useState<PurchaseOrder[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [supplierFilter, setSupplierFilter] = useState('all');
+  const [isLoading, setIsLoading] = useState(true);
+  const [suppliers, setSuppliers] = useState<{ id: string; name: string }[]>([]);
+
+  useEffect(() => {
+    fetchPurchaseOrders();
+    fetchSuppliers();
+  }, []);
+
+  useEffect(() => {
+    filterOrders();
+  }, [searchTerm, statusFilter, supplierFilter, purchaseOrders]);
+
+  const fetchSuppliers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('suppliers')
+        .select('id, name')
+        .eq('is_active', true)
+        .order('name');
+
+      if (error) throw error;
+      setSuppliers(data || []);
+    } catch (error: any) {
+      console.error('Error fetching suppliers:', error);
+    }
+  };
+
+  const fetchPurchaseOrders = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('purchase_orders')
+        .select(`
+          id,
+          order_number,
+          issue_date,
+          total_amount,
+          status,
+          suppliers!inner (
+            name
+          )
+        `)
+        .order('issue_date', { ascending: false });
+
+      if (error) throw error;
+
+      const formattedOrders = data?.map(order => ({
+        id: order.id,
+        order_number: order.order_number,
+        supplier_name: order.suppliers.name,
+        issue_date: order.issue_date,
+        total_amount: order.total_amount,
+        status: order.status
+      })) || [];
+
+      setPurchaseOrders(formattedOrders);
+    } catch (error: any) {
+      console.error('Error fetching purchase orders:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load purchase orders. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const filterOrders = () => {
+    let filtered = purchaseOrders;
+
+    // Filter by search term
+    if (searchTerm) {
+      filtered = filtered.filter(order => 
+        order.order_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.supplier_name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Filter by status
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(order => 
+        order.status.toLowerCase() === statusFilter.toLowerCase()
+      );
+    }
+
+    // Filter by supplier
+    if (supplierFilter !== 'all') {
+      const selectedSupplier = suppliers.find(s => s.id === supplierFilter);
+      if (selectedSupplier) {
+        filtered = filtered.filter(order => 
+          order.supplier_name === selectedSupplier.name
+        );
+      }
+    }
+
+    setFilteredOrders(filtered);
+  };
+
+  const handleApplyFilters = () => {
+    filterOrders();
+    toast({
+      title: "Filters Applied",
+      description: `Showing ${filteredOrders.length} purchase orders`,
+    });
+  };
 
   return (
     <motion.div
@@ -88,10 +200,15 @@ const PurchaseOrders = () => {
         <CardContent>
           <div className="flex flex-col md:flex-row gap-4">
             <div className="grid w-full md:max-w-sm items-center gap-1.5">
-              <Input type="text" placeholder="Search purchase orders..." />
+              <Input 
+                type="text" 
+                placeholder="Search purchase orders..." 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
             <div className="grid w-full md:max-w-sm items-center gap-1.5">
-              <Select>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger>
                   <SelectValue placeholder="Filter by status" />
                 </SelectTrigger>
@@ -104,19 +221,21 @@ const PurchaseOrders = () => {
               </Select>
             </div>
             <div className="grid w-full md:max-w-sm items-center gap-1.5">
-              <Select>
+              <Select value={supplierFilter} onValueChange={setSupplierFilter}>
                 <SelectTrigger>
                   <SelectValue placeholder="Filter by supplier" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Suppliers</SelectItem>
-                  <SelectItem value="tech-solutions">Tech Solutions Inc.</SelectItem>
-                  <SelectItem value="office-supplies">Office Supplies Co.</SelectItem>
-                  <SelectItem value="furniture-depot">Furniture Depot</SelectItem>
+                  {suppliers.map(supplier => (
+                    <SelectItem key={supplier.id} value={supplier.id}>
+                      {supplier.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
-            <Button variant="outline" className="w-full md:w-auto">
+            <Button variant="outline" className="w-full md:w-auto" onClick={handleApplyFilters}>
               <Filter className="mr-2 h-4 w-4" />
               Apply Filters
             </Button>
@@ -130,7 +249,9 @@ const PurchaseOrders = () => {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-lg font-medium">Purchase Orders</CardTitle>
-              <CardDescription>Showing {purchaseOrders.length} purchase orders</CardDescription>
+              <CardDescription>
+                {isLoading ? 'Loading...' : `Showing ${filteredOrders.length} purchase orders`}
+              </CardDescription>
             </div>
             <Button variant="outline" size="sm">
               <Download className="mr-2 h-4 w-4" />
@@ -140,39 +261,54 @@ const PurchaseOrders = () => {
         </CardHeader>
         <CardContent>
           <div className="relative w-full overflow-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[120px]">PO Number</TableHead>
-                  <TableHead>Supplier</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {purchaseOrders.map((po) => (
-                  <TableRow key={po.id}>
-                    <TableCell className="font-medium">{po.id}</TableCell>
-                    <TableCell>{po.supplier}</TableCell>
-                    <TableCell>{new Date(po.date).toLocaleDateString()}</TableCell>
-                    <TableCell className="text-right">${po.total.toLocaleString()}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={getStatusColor(po.status)}>
-                        {po.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                        <FileText className="h-4 w-4" />
-                        <span className="sr-only">View details</span>
-                      </Button>
-                    </TableCell>
+            {isLoading ? (
+              <div className="flex items-center justify-center h-32">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+                <p className="ml-3">Loading purchase orders...</p>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[120px]">PO Number</TableHead>
+                    <TableHead>Supplier</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead className="text-right">Total</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredOrders.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                        No purchase orders found
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredOrders.map((po) => (
+                      <TableRow key={po.id}>
+                        <TableCell className="font-medium">{po.order_number}</TableCell>
+                        <TableCell>{po.supplier_name}</TableCell>
+                        <TableCell>{new Date(po.issue_date).toLocaleDateString()}</TableCell>
+                        <TableCell className="text-right">${po.total_amount.toLocaleString()}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={getStatusColor(po.status)}>
+                            {po.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <FileText className="h-4 w-4" />
+                            <span className="sr-only">View details</span>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            )}
           </div>
         </CardContent>
       </Card>
