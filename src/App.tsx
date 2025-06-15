@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -177,6 +178,12 @@ const App = () => {
                       <Route path="/customers/add" element={<ProtectedRoute><AddCustomer /></ProtectedRoute>} />
                       <Route path="/suppliers" element={<ProtectedRoute><Suppliers /></ProtectedRoute>} />
                       <Route path="/suppliers/add" element={<ProtectedRoute><AddSupplier /></ProtectedRoute>} />
+                      
+                      {/* Supplier List Routes */}
+                      <Route path="/suppliers/all" element={<ProtectedRoute><AllSuppliers /></ProtectedRoute>} />
+                      <Route path="/suppliers/active" element={<ProtectedRoute><ActiveSuppliers /></ProtectedRoute>} />
+                      <Route path="/suppliers/inactive" element={<ProtectedRoute><InactiveSuppliers /></ProtectedRoute>} />
+                      <Route path="/suppliers/by-category" element={<ProtectedRoute><SuppliersByCategory /></ProtectedRoute>} />
                       
                       {/* Supplier Transaction Routes */}
                       <Route path="/suppliers/transactions/purchase-orders" element={<ProtectedRoute><PurchaseOrders /></ProtectedRoute>} />
