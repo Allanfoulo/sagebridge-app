@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, FileText, Download, Filter, Plus, Calendar, DollarSign } from 'lucide-react';
@@ -28,49 +27,15 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-
-const invoices = [
-  { id: 'INV-2023-001', supplier: 'Tech Solutions Inc.', date: '2023-06-15', dueDate: '2023-07-15', total: 5624.99, status: 'Paid' },
-  { id: 'INV-2023-002', supplier: 'Office Supplies Co.', date: '2023-06-18', dueDate: '2023-07-18', total: 1287.50, status: 'Pending' },
-  { id: 'INV-2023-003', supplier: 'Furniture Depot', date: '2023-06-20', dueDate: '2023-07-20', total: 8745.00, status: 'Overdue' },
-  { id: 'INV-2023-004', supplier: 'Electronics Warehouse', date: '2023-06-22', dueDate: '2023-07-22', total: 3456.78, status: 'Paid' },
-  { id: 'INV-2023-005', supplier: 'Industrial Parts Ltd.', date: '2023-06-25', dueDate: '2023-07-25', total: 12589.99, status: 'Pending' },
-  { id: 'INV-2023-006', supplier: 'Building Materials Inc.', date: '2023-06-28', dueDate: '2023-07-28', total: 6543.21, status: 'Overdue' },
-  { id: 'INV-2023-007', supplier: 'Tech Solutions Inc.', date: '2023-07-01', dueDate: '2023-08-01', total: 2345.67, status: 'Paid' },
-  { id: 'INV-2023-008', supplier: 'Office Supplies Co.', date: '2023-07-05', dueDate: '2023-08-05', total: 876.54, status: 'Pending' },
-];
-
-const stats = [
-  { 
-    title: "Total Outstanding", 
-    value: "$29,543.02", 
-    description: "From 23 invoices", 
-    icon: <DollarSign className="h-4 w-4" />,
-    color: "text-yellow-600"
-  },
-  { 
-    title: "Overdue", 
-    value: "$15,288.21", 
-    description: "8 invoices past due date", 
-    icon: <Calendar className="h-4 w-4" />,
-    color: "text-red-600" 
-  },
-  { 
-    title: "Paid this month", 
-    value: "$42,837.90", 
-    description: "17 invoices paid", 
-    icon: <DollarSign className="h-4 w-4" />,
-    color: "text-green-600"
-  },
-];
+import { useSupplierInvoices } from '@/hooks/useSupplierInvoices';
 
 const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'Paid':
+  switch (status.toLowerCase()) {
+    case 'paid':
       return 'bg-green-100 text-green-800 hover:bg-green-200';
-    case 'Pending':
+    case 'pending':
       return 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200';
-    case 'Overdue':
+    case 'overdue':
       return 'bg-red-100 text-red-800 hover:bg-red-200';
     default:
       return 'bg-gray-100 text-gray-800 hover:bg-gray-200';
@@ -79,6 +44,59 @@ const getStatusColor = (status: string) => {
 
 const Invoices = () => {
   const navigate = useNavigate();
+  const {
+    invoices,
+    suppliers,
+    isLoading,
+    searchTerm,
+    setSearchTerm,
+    statusFilter,
+    setStatusFilter,
+    supplierFilter,
+    setSupplierFilter,
+    stats
+  } = useSupplierInvoices();
+
+  const statsData = [
+    { 
+      title: "Total Outstanding", 
+      value: `$${stats.totalOutstanding.toLocaleString()}`, 
+      description: `From ${stats.pendingCount + stats.overdueCount} invoices`, 
+      icon: <DollarSign className="h-4 w-4" />,
+      color: "text-yellow-600"
+    },
+    { 
+      title: "Overdue", 
+      value: `$${stats.overdue.toLocaleString()}`, 
+      description: `${stats.overdueCount} invoices past due date`, 
+      icon: <Calendar className="h-4 w-4" />,
+      color: "text-red-600" 
+    },
+    { 
+      title: "Paid this month", 
+      value: `$${stats.paidThisMonth.toLocaleString()}`, 
+      description: `${stats.paidCount} invoices paid`, 
+      icon: <DollarSign className="h-4 w-4" />,
+      color: "text-green-600"
+    },
+  ];
+
+  const filterInvoicesByStatus = (status: string) => {
+    if (status === 'all') return invoices;
+    return invoices.filter(invoice => invoice.status.toLowerCase() === status.toLowerCase());
+  };
+
+  if (isLoading) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="p-6 space-y-6"
+      >
+        <div className="text-center">Loading invoices...</div>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
@@ -111,7 +129,7 @@ const Invoices = () => {
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {stats.map((stat, index) => (
+        {statsData.map((stat, index) => (
           <Card key={index}>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -148,18 +166,25 @@ const Invoices = () => {
             <CardContent>
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="grid w-full md:max-w-sm items-center gap-1.5">
-                  <Input type="text" placeholder="Search invoices..." />
+                  <Input 
+                    type="text" 
+                    placeholder="Search invoices..." 
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
                 </div>
                 <div className="grid w-full md:max-w-sm items-center gap-1.5">
-                  <Select>
+                  <Select value={supplierFilter} onValueChange={setSupplierFilter}>
                     <SelectTrigger>
                       <SelectValue placeholder="Filter by supplier" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Suppliers</SelectItem>
-                      <SelectItem value="tech-solutions">Tech Solutions Inc.</SelectItem>
-                      <SelectItem value="office-supplies">Office Supplies Co.</SelectItem>
-                      <SelectItem value="furniture-depot">Furniture Depot</SelectItem>
+                      {suppliers.map(supplier => (
+                        <SelectItem key={supplier.id} value={supplier.id}>
+                          {supplier.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -202,11 +227,11 @@ const Invoices = () => {
                   <TableBody>
                     {invoices.map((invoice) => (
                       <TableRow key={invoice.id}>
-                        <TableCell className="font-medium">{invoice.id}</TableCell>
-                        <TableCell>{invoice.supplier}</TableCell>
-                        <TableCell>{new Date(invoice.date).toLocaleDateString()}</TableCell>
-                        <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
-                        <TableCell className="text-right">${invoice.total.toLocaleString()}</TableCell>
+                        <TableCell className="font-medium">{invoice.invoice_number}</TableCell>
+                        <TableCell>{invoice.supplier_name}</TableCell>
+                        <TableCell>{new Date(invoice.issue_date).toLocaleDateString()}</TableCell>
+                        <TableCell>{new Date(invoice.due_date).toLocaleDateString()}</TableCell>
+                        <TableCell className="text-right">${invoice.total_amount.toLocaleString()}</TableCell>
                         <TableCell>
                           <Badge variant="outline" className={getStatusColor(invoice.status)}>
                             {invoice.status}
@@ -227,34 +252,38 @@ const Invoices = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="pending" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Pending Invoices</CardTitle>
-              <CardDescription>Invoices awaiting payment</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[120px]">Invoice #</TableHead>
-                    <TableHead>Supplier</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Due Date</TableHead>
-                    <TableHead className="text-right">Total</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {invoices
-                    .filter(invoice => invoice.status === 'Pending')
-                    .map((invoice) => (
+        {/* Other tab contents with filtered data */}
+        {['pending', 'paid', 'overdue'].map((status) => (
+          <TabsContent key={status} value={status} className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>{status.charAt(0).toUpperCase() + status.slice(1)} Invoices</CardTitle>
+                <CardDescription>
+                  {status === 'pending' && 'Invoices awaiting payment'}
+                  {status === 'paid' && 'Completed invoice payments'}
+                  {status === 'overdue' && 'Past-due invoices requiring attention'}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[120px]">Invoice #</TableHead>
+                      <TableHead>Supplier</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Due Date</TableHead>
+                      <TableHead className="text-right">Total</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filterInvoicesByStatus(status).map((invoice) => (
                       <TableRow key={invoice.id}>
-                        <TableCell className="font-medium">{invoice.id}</TableCell>
-                        <TableCell>{invoice.supplier}</TableCell>
-                        <TableCell>{new Date(invoice.date).toLocaleDateString()}</TableCell>
-                        <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
-                        <TableCell className="text-right">${invoice.total.toLocaleString()}</TableCell>
+                        <TableCell className="font-medium">{invoice.invoice_number}</TableCell>
+                        <TableCell>{invoice.supplier_name}</TableCell>
+                        <TableCell>{new Date(invoice.issue_date).toLocaleDateString()}</TableCell>
+                        <TableCell>{new Date(invoice.due_date).toLocaleDateString()}</TableCell>
+                        <TableCell className="text-right">${invoice.total_amount.toLocaleString()}</TableCell>
                         <TableCell className="text-right">
                           <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                             <FileText className="h-4 w-4" />
@@ -263,95 +292,12 @@ const Invoices = () => {
                         </TableCell>
                       </TableRow>
                     ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="paid" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Paid Invoices</CardTitle>
-              <CardDescription>Completed invoice payments</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[120px]">Invoice #</TableHead>
-                    <TableHead>Supplier</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Due Date</TableHead>
-                    <TableHead className="text-right">Total</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {invoices
-                    .filter(invoice => invoice.status === 'Paid')
-                    .map((invoice) => (
-                      <TableRow key={invoice.id}>
-                        <TableCell className="font-medium">{invoice.id}</TableCell>
-                        <TableCell>{invoice.supplier}</TableCell>
-                        <TableCell>{new Date(invoice.date).toLocaleDateString()}</TableCell>
-                        <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
-                        <TableCell className="text-right">${invoice.total.toLocaleString()}</TableCell>
-                        <TableCell className="text-right">
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <FileText className="h-4 w-4" />
-                            <span className="sr-only">View details</span>
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="overdue" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Overdue Invoices</CardTitle>
-              <CardDescription>Past-due invoices requiring attention</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[120px]">Invoice #</TableHead>
-                    <TableHead>Supplier</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Due Date</TableHead>
-                    <TableHead className="text-right">Total</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {invoices
-                    .filter(invoice => invoice.status === 'Overdue')
-                    .map((invoice) => (
-                      <TableRow key={invoice.id}>
-                        <TableCell className="font-medium">{invoice.id}</TableCell>
-                        <TableCell>{invoice.supplier}</TableCell>
-                        <TableCell>{new Date(invoice.date).toLocaleDateString()}</TableCell>
-                        <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
-                        <TableCell className="text-right">${invoice.total.toLocaleString()}</TableCell>
-                        <TableCell className="text-right">
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <FileText className="h-4 w-4" />
-                            <span className="sr-only">View details</span>
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        ))}
       </Tabs>
     </motion.div>
   );
