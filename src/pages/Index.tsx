@@ -8,9 +8,11 @@ import PerformanceChart from '@/components/dashboard/PerformanceChart';
 import SystemStatus from '@/components/diagnostics/SystemStatus';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 const Index: React.FC = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Check if the app is working properly on initial load
@@ -19,6 +21,22 @@ const Index: React.FC = () => {
       description: "The dashboard has been loaded successfully.",
     });
   }, [toast]);
+
+  const handleCreateInvoice = () => {
+    navigate('/sales/new-invoice');
+  };
+
+  const handleEnterExpense = () => {
+    navigate('/purchases/new-purchase-invoice');
+  };
+
+  const handleRunReport = () => {
+    navigate('/reports');
+  };
+
+  const handleReconcileAccounts = () => {
+    navigate('/accounting/reconciliation');
+  };
 
   return (
     <MainLayout>
@@ -69,16 +87,28 @@ const Index: React.FC = () => {
               <div className="bg-primary-100 p-5 rounded-lg border border-primary-200 h-full">
                 <h3 className="font-semibold text-lg text-primary-800">Quick Actions</h3>
                 <div className="space-y-3 mt-4">
-                  <button className="bg-white hover:bg-sage-lightGray text-sage-darkGray w-full py-3 px-4 rounded-lg text-sm font-medium transition-colors text-left shadow-sm">
+                  <button 
+                    onClick={handleCreateInvoice}
+                    className="bg-white hover:bg-sage-lightGray text-sage-darkGray w-full py-3 px-4 rounded-lg text-sm font-medium transition-colors text-left shadow-sm"
+                  >
                     Create New Invoice
                   </button>
-                  <button className="bg-white hover:bg-sage-lightGray text-sage-darkGray w-full py-3 px-4 rounded-lg text-sm font-medium transition-colors text-left shadow-sm">
+                  <button 
+                    onClick={handleEnterExpense}
+                    className="bg-white hover:bg-sage-lightGray text-sage-darkGray w-full py-3 px-4 rounded-lg text-sm font-medium transition-colors text-left shadow-sm"
+                  >
                     Enter New Expense
                   </button>
-                  <button className="bg-white hover:bg-sage-lightGray text-sage-darkGray w-full py-3 px-4 rounded-lg text-sm font-medium transition-colors text-left shadow-sm">
+                  <button 
+                    onClick={handleRunReport}
+                    className="bg-white hover:bg-sage-lightGray text-sage-darkGray w-full py-3 px-4 rounded-lg text-sm font-medium transition-colors text-left shadow-sm"
+                  >
                     Run Financial Report
                   </button>
-                  <button className="bg-white hover:bg-sage-lightGray text-sage-darkGray w-full py-3 px-4 rounded-lg text-sm font-medium transition-colors text-left shadow-sm">
+                  <button 
+                    onClick={handleReconcileAccounts}
+                    className="bg-white hover:bg-sage-lightGray text-sage-darkGray w-full py-3 px-4 rounded-lg text-sm font-medium transition-colors text-left shadow-sm"
+                  >
                     Reconcile Accounts
                   </button>
                 </div>

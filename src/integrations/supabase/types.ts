@@ -381,6 +381,117 @@ export type Database = {
           },
         ]
       }
+      message_threads: {
+        Row: {
+          client_id: string
+          created_at: string | null
+          id: string
+          last_activity: string | null
+          priority: string | null
+          status: string | null
+          subject: string
+          updated_at: string | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string | null
+          id?: string
+          last_activity?: string | null
+          priority?: string | null
+          status?: string | null
+          subject: string
+          updated_at?: string | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string | null
+          id?: string
+          last_activity?: string | null
+          priority?: string | null
+          status?: string | null
+          subject?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_threads_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          created_at: string | null
+          file_attachments: Json | null
+          id: string
+          is_read: boolean | null
+          message_content: string
+          recipient_id: string
+          recipient_type: string
+          sender_id: string
+          sender_type: string
+          subject: string
+          thread_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          file_attachments?: Json | null
+          id?: string
+          is_read?: boolean | null
+          message_content: string
+          recipient_id: string
+          recipient_type: string
+          sender_id: string
+          sender_type: string
+          subject: string
+          thread_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          file_attachments?: Json | null
+          id?: string
+          is_read?: boolean | null
+          message_content?: string
+          recipient_id?: string
+          recipient_type?: string
+          sender_id?: string
+          sender_type?: string
+          subject?: string
+          thread_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "message_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       permissions: {
         Row: {
           action: string
@@ -485,25 +596,37 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           email: string
+          first_name: string | null
           full_name: string | null
           id: string
+          last_name: string | null
+          phone: string | null
           updated_at: string
+          user_type: string | null
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
           email: string
+          first_name?: string | null
           full_name?: string | null
           id: string
+          last_name?: string | null
+          phone?: string | null
           updated_at?: string
+          user_type?: string | null
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
           email?: string
+          first_name?: string | null
           full_name?: string | null
           id?: string
+          last_name?: string | null
+          phone?: string | null
           updated_at?: string
+          user_type?: string | null
         }
         Relationships: []
       }
