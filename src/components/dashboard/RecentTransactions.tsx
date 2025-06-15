@@ -1,8 +1,10 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { ArrowDownUp, ChevronRight } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface Transaction {
   id: string;
@@ -14,49 +16,116 @@ interface Transaction {
 }
 
 const RecentTransactions: React.FC = () => {
-  const transactions: Transaction[] = [
-    {
-      id: 'tx-1',
-      date: '2023-06-01',
-      description: 'Airbnb Design Services',
-      category: 'Income',
-      amount: '+R2,400.00',
-      type: 'income'
-    },
-    {
-      id: 'tx-2',
-      date: '2023-05-30',
-      description: 'Office Supplies',
-      category: 'Expense',
-      amount: '-R350.00',
-      type: 'expense'
-    },
-    {
-      id: 'tx-3',
-      date: '2023-05-28',
-      description: 'Server Hosting',
-      category: 'Expense',
-      amount: '-R120.00',
-      type: 'expense'
-    },
-    {
-      id: 'tx-4',
-      date: '2023-05-25',
-      description: 'Google Marketing Services',
-      category: 'Income',
-      amount: '+R1,800.00',
-      type: 'income'
-    },
-    {
-      id: 'tx-5',
-      date: '2023-05-23',
-      description: 'Business Travel',
-      category: 'Expense',
-      amount: '-R750.00',
-      type: 'expense'
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchRecentTransactions();
+  }, []);
+
+  const fetchRecentTransactions = async () => {
+    try {
+      setIsLoading(true);
+
+      // Fetch recent sales invoices (income)
+      const { data: salesInvoices, error: salesError } = await supabase
+        .from('sales_invoices')
+        .select(`
+          id,
+          invoice_date,
+          total,
+          customers(name)
+        `)
+        .order('invoice_date', { ascending: false })
+        .limit(3);
+
+      if (salesError) throw salesError;
+
+      // Fetch recent supplier invoices (expenses)
+      const { data: supplierInvoices, error: supplierError } = await supabase
+        .from('supplier_invoices')
+        .select(`
+          id,
+          issue_date,
+          total_amount,
+          suppliers(name)
+        `)
+        .order('issue_date', { ascending: false })
+        .limit(3);
+
+      if (supplierError) throw supplierError;
+
+      // Combine and format transactions
+      const combinedTransactions: Transaction[] = [];
+
+      // Add sales invoices as income
+      salesInvoices?.forEach(invoice => {
+        combinedTransactions.push({
+          id: `sales-${invoice.id}`,
+          date: invoice.invoice_date,
+          description: `Invoice - ${invoice.customers?.name || 'Unknown Customer'}`,
+          category: 'Sales',
+          amount: `+R${Number(invoice.total).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`,
+          type: 'income'
+        });
+      });
+
+      // Add supplier invoices as expenses
+      supplierInvoices?.forEach(invoice => {
+        combinedTransactions.push({
+          id: `supplier-${invoice.id}`,
+          date: invoice.issue_date,
+          description: `Purchase - ${invoice.suppliers?.name || 'Unknown Supplier'}`,
+          category: 'Purchases',
+          amount: `-R${Number(invoice.total_amount).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`,
+          type: 'expense'
+        });
+      });
+
+      // Sort by date and take the 5 most recent
+      combinedTransactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      setTransactions(combinedTransactions.slice(0, 5));
+
+    } catch (error: any) {
+      console.error('Error fetching transactions:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load recent transactions.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
     }
-  ];
+  };
   
+  if (isLoading) {
+    return (
+      <Card className="h-full">
+        <CardHeader className="pb-0">
+          <CardTitle className="text-lg">Recent Transactions</CardTitle>
+          <p className="text-sm text-muted-foreground mt-1">Loading transactions...</p>
+        </CardHeader>
+        <CardContent className="py-4">
+          <div className="space-y-4">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-gray-100 animate-pulse">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gray-200"></div>
+                  <div>
+                    <div className="w-32 h-4 bg-gray-200 rounded mb-1"></div>
+                    <div className="w-24 h-3 bg-gray-200 rounded"></div>
+                  </div>
+                </div>
+                <div className="w-20 h-4 bg-gray-200 rounded"></div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="h-full">
       <CardHeader className="pb-0 flex justify-between items-center">
@@ -69,36 +138,43 @@ const RecentTransactions: React.FC = () => {
         </button>
       </CardHeader>
       <CardContent className="py-4">
-        <div className="space-y-4">
-          {transactions.map((transaction) => (
-            <div 
-              key={transaction.id}
-              className="flex items-center justify-between p-3 rounded-lg hover:bg-sage-lightGray transition-colors cursor-pointer"
-            >
-              <div className="flex items-center gap-3">
+        {transactions.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <ArrowDownUp size={48} className="mx-auto mb-4 opacity-50" />
+            <p>No recent transactions found</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {transactions.map((transaction) => (
+              <div 
+                key={transaction.id}
+                className="flex items-center justify-between p-3 rounded-lg hover:bg-sage-lightGray transition-colors cursor-pointer"
+              >
+                <div className="flex items-center gap-3">
+                  <div className={cn(
+                    "w-10 h-10 rounded-full flex items-center justify-center",
+                    transaction.type === 'income' ? "bg-green-100" : "bg-red-100"
+                  )}>
+                    <ArrowDownUp 
+                      size={16} 
+                      className={transaction.type === 'income' ? "text-green-600" : "text-red-600"} 
+                    />
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">{transaction.description}</p>
+                    <p className="text-xs text-muted-foreground">{transaction.date} • {transaction.category}</p>
+                  </div>
+                </div>
                 <div className={cn(
-                  "w-10 h-10 rounded-full flex items-center justify-center",
-                  transaction.type === 'income' ? "bg-green-100" : "bg-red-100"
+                  "font-medium",
+                  transaction.type === 'income' ? "text-green-600" : "text-red-600"
                 )}>
-                  <ArrowDownUp 
-                    size={16} 
-                    className={transaction.type === 'income' ? "text-green-600" : "text-red-600"} 
-                  />
-                </div>
-                <div>
-                  <p className="font-medium text-sm">{transaction.description}</p>
-                  <p className="text-xs text-muted-foreground">{transaction.date} • {transaction.category}</p>
+                  {transaction.amount}
                 </div>
               </div>
-              <div className={cn(
-                "font-medium",
-                transaction.type === 'income' ? "text-green-600" : "text-red-600"
-              )}>
-                {transaction.amount}
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
