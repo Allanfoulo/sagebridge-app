@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -41,7 +40,95 @@ const useSuppliers = () => {
   useEffect(() => {
     fetchSuppliers();
     fetchCategories();
+    setupRealtimeSubscription();
+
+    // Cleanup function to remove subscription
+    return () => {
+      supabase.removeAllChannels();
+    };
   }, []);
+
+  const setupRealtimeSubscription = () => {
+    console.log('Setting up real-time subscription for suppliers');
+    
+    const channel = supabase
+      .channel('suppliers-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'suppliers'
+        },
+        (payload) => {
+          console.log('Supplier change detected:', payload);
+          handleRealtimeChange(payload);
+        }
+      )
+      .subscribe((status) => {
+        console.log('Suppliers subscription status:', status);
+        if (status === 'SUBSCRIBED') {
+          console.log('Successfully subscribed to suppliers changes');
+        }
+      });
+
+    return channel;
+  };
+
+  const handleRealtimeChange = async (payload: any) => {
+    console.log('Handling supplier realtime change:', payload.eventType);
+    
+    try {
+      if (payload.eventType === 'INSERT') {
+        // Add new supplier with category info
+        const newSupplier = {
+          ...payload.new,
+          status: payload.new.is_active ? 'Active' as const : 'Inactive' as const,
+          category: getCategoryName(payload.new.category_id)
+        };
+        
+        setSuppliers(prev => [newSupplier, ...prev]);
+        toast({
+          title: "New Supplier",
+          description: `Supplier ${payload.new.name} has been added.`,
+        });
+      } else if (payload.eventType === 'UPDATE') {
+        // Update existing supplier
+        setSuppliers(prev => 
+          prev.map(supplier => 
+            supplier.id === payload.new.id 
+              ? {
+                  ...payload.new,
+                  status: payload.new.is_active ? 'Active' as const : 'Inactive' as const,
+                  category: getCategoryName(payload.new.category_id)
+                }
+              : supplier
+          )
+        );
+        toast({
+          title: "Supplier Updated",
+          description: `Supplier ${payload.new.name} has been updated.`,
+        });
+      } else if (payload.eventType === 'DELETE') {
+        // Remove deleted supplier
+        setSuppliers(prev => 
+          prev.filter(supplier => supplier.id !== payload.old.id)
+        );
+        toast({
+          title: "Supplier Deleted",
+          description: `Supplier has been removed.`,
+        });
+      }
+    } catch (error) {
+      console.error('Error handling supplier realtime change:', error);
+    }
+  };
+
+  const getCategoryName = (categoryId: string | null) => {
+    if (!categoryId) return undefined;
+    const category = categories.find(cat => cat.id === categoryId);
+    return category?.name;
+  };
 
   const fetchCategories = async () => {
     try {
@@ -68,6 +155,7 @@ const useSuppliers = () => {
   const fetchSuppliers = async () => {
     try {
       setIsLoading(true);
+      console.log('Fetching suppliers with real-time support...');
       
       // First fetch the supplier categories
       const { data: categoriesData, error: categoriesError } = await supabase
@@ -104,6 +192,7 @@ const useSuppliers = () => {
           : undefined
       })) || [];
 
+      console.log('Fetched suppliers:', mappedSuppliers.length);
       setSuppliers(mappedSuppliers);
       setCategories(categoriesData || []);
     } catch (error: any) {
