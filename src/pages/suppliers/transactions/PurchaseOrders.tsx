@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, FileText, Download, Filter, Plus } from 'lucide-react';
@@ -24,6 +23,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import PurchaseOrderDetails from '@/components/suppliers/PurchaseOrderDetails';
 
 interface PurchaseOrder {
   id: string;
@@ -32,6 +32,7 @@ interface PurchaseOrder {
   issue_date: string;
   total_amount: number;
   status: string;
+  notes?: string;
 }
 
 const getStatusColor = (status: string) => {
@@ -57,6 +58,8 @@ const PurchaseOrders = () => {
   const [supplierFilter, setSupplierFilter] = useState('all');
   const [isLoading, setIsLoading] = useState(true);
   const [suppliers, setSuppliers] = useState<{ id: string; name: string }[]>([]);
+  const [selectedPurchaseOrder, setSelectedPurchaseOrder] = useState<PurchaseOrder | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   useEffect(() => {
     fetchPurchaseOrders();
@@ -93,6 +96,7 @@ const PurchaseOrders = () => {
           issue_date,
           total_amount,
           status,
+          notes,
           suppliers!inner (
             name
           )
@@ -107,7 +111,8 @@ const PurchaseOrders = () => {
         supplier_name: order.suppliers.name,
         issue_date: order.issue_date,
         total_amount: order.total_amount,
-        status: order.status
+        status: order.status,
+        notes: order.notes
       })) || [];
 
       setPurchaseOrders(formattedOrders);
@@ -160,6 +165,16 @@ const PurchaseOrders = () => {
       title: "Filters Applied",
       description: `Showing ${filteredOrders.length} purchase orders`,
     });
+  };
+
+  const handleViewDetails = (purchaseOrder: PurchaseOrder) => {
+    setSelectedPurchaseOrder(purchaseOrder);
+    setIsDetailsOpen(true);
+  };
+
+  const handleCloseDetails = () => {
+    setIsDetailsOpen(false);
+    setSelectedPurchaseOrder(null);
   };
 
   return (
@@ -298,7 +313,12 @@ const PurchaseOrders = () => {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-8 w-8 p-0"
+                            onClick={() => handleViewDetails(po)}
+                          >
                             <FileText className="h-4 w-4" />
                             <span className="sr-only">View details</span>
                           </Button>
@@ -312,6 +332,13 @@ const PurchaseOrders = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Purchase Order Details Modal */}
+      <PurchaseOrderDetails
+        purchaseOrder={selectedPurchaseOrder}
+        isOpen={isDetailsOpen}
+        onClose={handleCloseDetails}
+      />
     </motion.div>
   );
 };
