@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -46,6 +45,7 @@ interface InvoiceReportProps {
 const InvoiceReport: React.FC<InvoiceReportProps> = ({ invoiceId, onClose }) => {
   const [invoice, setInvoice] = useState<InvoiceData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDownloading, setIsDownloading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -105,14 +105,197 @@ const InvoiceReport: React.FC<InvoiceReportProps> = ({ invoiceId, onClose }) => 
   };
 
   const handlePrint = () => {
+    // Hide the action buttons and show a print-friendly version
+    const actionButtons = document.querySelector('.print\\:hidden');
+    if (actionButtons) {
+      (actionButtons as HTMLElement).style.display = 'none';
+    }
+    
+    // Trigger print
     window.print();
+    
+    // Restore the action buttons after printing
+    setTimeout(() => {
+      if (actionButtons) {
+        (actionButtons as HTMLElement).style.display = 'flex';
+      }
+    }, 1000);
   };
 
-  const handleDownload = () => {
-    toast({
-      title: "Download",
-      description: "PDF download functionality will be implemented soon.",
-    });
+  const handleDownload = async () => {
+    if (!invoice) return;
+    
+    setIsDownloading(true);
+    try {
+      // Create a new window with the invoice content for PDF generation
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        throw new Error('Unable to open print window. Please check your popup blocker.');
+      }
+
+      // Generate HTML content for the invoice
+      const invoiceHTML = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Invoice ${invoice.invoice_number}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 40px; color: #333; }
+            .header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 30px; }
+            .invoice-title { color: #2563eb; font-size: 28px; font-weight: bold; margin-bottom: 8px; }
+            .invoice-number { font-size: 18px; font-weight: 600; }
+            .status-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+            .status-draft { background-color: #dbeafe; color: #1e40af; }
+            .status-paid { background-color: #dcfce7; color: #166534; }
+            .status-pending { background-color: #fef3c7; color: #92400e; }
+            .status-overdue { background-color: #fee2e2; color: #991b1b; }
+            .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 30px; }
+            .bill-to h3 { font-weight: 600; margin-bottom: 8px; }
+            .bill-to p { margin: 2px 0; font-size: 14px; }
+            .invoice-details { text-align: right; }
+            .invoice-details div { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 14px; }
+            .invoice-details .label { color: #6b7280; margin-right: 20px; }
+            table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+            th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+            th { font-weight: 600; background-color: #f9fafb; }
+            .text-right { text-align: right; }
+            .text-center { text-align: center; }
+            .totals { width: 300px; margin-left: auto; margin-top: 20px; }
+            .totals div { display: flex; justify-content: space-between; margin-bottom: 8px; }
+            .total-line { font-weight: bold; font-size: 18px; border-top: 1px solid #e5e7eb; padding-top: 8px; }
+            .notes { margin-top: 30px; }
+            .notes h3 { font-weight: 600; margin-bottom: 8px; }
+            .footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6b7280; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div>
+              <div class="invoice-title">INVOICE</div>
+              <div class="invoice-number">${invoice.invoice_number}</div>
+            </div>
+            <div>
+              <span class="status-badge status-${invoice.status.toLowerCase()}">
+                Status: ${invoice.status}
+              </span>
+            </div>
+          </div>
+
+          <div class="details-grid">
+            <div class="bill-to">
+              <h3>Bill To:</h3>
+              <p><strong>${invoice.customer.name}</strong></p>
+              ${invoice.customer.email ? `<p>${invoice.customer.email}</p>` : ''}
+              ${invoice.customer.phone ? `<p>${invoice.customer.phone}</p>` : ''}
+              ${invoice.customer.address ? `<p>${invoice.customer.address}</p>` : ''}
+            </div>
+            
+            <div class="invoice-details">
+              <div>
+                <span class="label">Invoice Date:</span>
+                <span>${new Date(invoice.invoice_date).toLocaleDateString()}</span>
+              </div>
+              <div>
+                <span class="label">Due Date:</span>
+                <span>${new Date(invoice.due_date).toLocaleDateString()}</span>
+              </div>
+              ${invoice.payment_terms ? `
+                <div>
+                  <span class="label">Payment Terms:</span>
+                  <span>${invoice.payment_terms}</span>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+
+          <h3>Items</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Description</th>
+                <th class="text-center">Qty</th>
+                <th class="text-right">Unit Price</th>
+                <th class="text-right">Tax %</th>
+                <th class="text-right">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${invoice.items.map(item => `
+                <tr>
+                  <td>${item.description}</td>
+                  <td class="text-center">${item.quantity}</td>
+                  <td class="text-right">${getCurrencySymbol(invoice.currency)}${item.unit_price.toFixed(2)}</td>
+                  <td class="text-right">${item.tax_percent}%</td>
+                  <td class="text-right">${getCurrencySymbol(invoice.currency)}${item.line_total.toFixed(2)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          <div class="totals">
+            <div>
+              <span>Subtotal:</span>
+              <span>${getCurrencySymbol(invoice.currency)}${invoice.subtotal.toFixed(2)}</span>
+            </div>
+            <div>
+              <span>Tax:</span>
+              <span>${getCurrencySymbol(invoice.currency)}${invoice.tax_total.toFixed(2)}</span>
+            </div>
+            <div class="total-line">
+              <span>Total:</span>
+              <span>${getCurrencySymbol(invoice.currency)}${invoice.total.toFixed(2)}</span>
+            </div>
+          </div>
+
+          ${invoice.notes ? `
+            <div class="notes">
+              <h3>Notes</h3>
+              <p>${invoice.notes}</p>
+            </div>
+          ` : ''}
+
+          <div class="footer">
+            <p>Thank you for your business!</p>
+          </div>
+        </body>
+        </html>
+      `;
+
+      printWindow.document.write(invoiceHTML);
+      printWindow.document.close();
+
+      // Wait a moment for the content to load, then print
+      setTimeout(() => {
+        printWindow.print();
+        
+        // Close the window after printing
+        printWindow.onafterprint = () => {
+          printWindow.close();
+        };
+        
+        // Fallback to close window after a delay
+        setTimeout(() => {
+          if (!printWindow.closed) {
+            printWindow.close();
+          }
+        }, 3000);
+      }, 500);
+
+      toast({
+        title: "Download Started",
+        description: "Your invoice PDF download should start shortly. If it doesn't, please check your browser's print dialog.",
+      });
+
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        variant: "destructive",
+        title: "Download Failed",
+        description: "Unable to generate PDF. Please try again or use the print function.",
+      });
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   if (isLoading) {
@@ -151,13 +334,23 @@ const InvoiceReport: React.FC<InvoiceReportProps> = ({ invoiceId, onClose }) => 
           <div className="flex items-center justify-between">
             <CardTitle>Invoice Report</CardTitle>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={handlePrint}>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handlePrint}
+                disabled={isDownloading}
+              >
                 <Printer className="h-4 w-4 mr-2" />
                 Print
               </Button>
-              <Button variant="outline" size="sm" onClick={handleDownload}>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleDownload}
+                disabled={isDownloading}
+              >
                 <Download className="h-4 w-4 mr-2" />
-                Download
+                {isDownloading ? 'Generating...' : 'Download'}
               </Button>
               <Button variant="outline" size="sm" onClick={onClose}>
                 <X className="h-4 w-4" />
