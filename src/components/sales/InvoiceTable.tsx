@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { Loader2, Check, Clock, X } from 'lucide-react';
+import { Loader2, Check, Clock, X, Eye } from 'lucide-react';
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -10,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { updateInvoiceStatus } from '@/utils/salesInvoiceService';
+import InvoiceReport from './InvoiceReport';
 
 interface Invoice {
   id: string;
@@ -37,6 +37,7 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({
 }) => {
   const { toast } = useToast();
   const [updatingInvoice, setUpdatingInvoice] = useState<string | null>(null);
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
 
   const handleStatusChange = async (invoiceId: string, newStatus: string) => {
     setUpdatingInvoice(invoiceId);
@@ -67,6 +68,10 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({
     } finally {
       setUpdatingInvoice(null);
     }
+  };
+
+  const handleViewInvoice = (invoiceId: string) => {
+    setSelectedInvoiceId(invoiceId);
   };
 
   const getStatusIcon = (status: string) => {
@@ -124,7 +129,13 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({
                     </td>
                     <td className="py-3 text-sm">
                       <div className="flex gap-2">
-                        <button className="text-primary-500 hover:text-primary-600">View</button>
+                        <button 
+                          className="text-primary-500 hover:text-primary-600 flex items-center gap-1"
+                          onClick={() => handleViewInvoice(invoice.id)}
+                        >
+                          <Eye className="h-4 w-4" />
+                          View
+                        </button>
                         <button className="text-primary-500 hover:text-primary-600">Edit</button>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -186,6 +197,7 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({
           </table>
         </div>
       )}
+      
       <div className="flex justify-between items-center mt-4">
         <div className="text-sm text-muted-foreground">
           Showing {filteredInvoices.length} of {invoices.length} invoices
@@ -206,6 +218,14 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({
           </div>
         )}
       </div>
+
+      {/* Invoice Report Modal */}
+      {selectedInvoiceId && (
+        <InvoiceReport 
+          invoiceId={selectedInvoiceId} 
+          onClose={() => setSelectedInvoiceId(null)} 
+        />
+      )}
     </>
   );
 };

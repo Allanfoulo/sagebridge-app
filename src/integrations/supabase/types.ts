@@ -110,6 +110,56 @@ export type Database = {
           },
         ]
       }
+      claims: {
+        Row: {
+          amount: number
+          claim_number: string
+          created_at: string
+          description: string
+          id: string
+          policy_id: string
+          status: string
+          submitted_date: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          claim_number: string
+          created_at?: string
+          description: string
+          id?: string
+          policy_id: string
+          status?: string
+          submitted_date: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          claim_number?: string
+          created_at?: string
+          description?: string
+          id?: string
+          policy_id?: string
+          status?: string
+          submitted_date?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "claims_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "policies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_categories: {
         Row: {
           created_at: string
@@ -352,6 +402,81 @@ export type Database = {
           description?: string | null
           id?: string
           module?: string
+        }
+        Relationships: []
+      }
+      policies: {
+        Row: {
+          coverage_amount: number
+          created_at: string
+          created_by: string | null
+          expiry_date: string
+          id: string
+          policy_number: string
+          premium_amount: number
+          start_date: string
+          status: string
+          type: string
+          updated_at: string
+          updated_by: string | null
+          user_id: string
+        }
+        Insert: {
+          coverage_amount?: number
+          created_at?: string
+          created_by?: string | null
+          expiry_date: string
+          id?: string
+          policy_number: string
+          premium_amount?: number
+          start_date: string
+          status?: string
+          type: string
+          updated_at?: string
+          updated_by?: string | null
+          user_id: string
+        }
+        Update: {
+          coverage_amount?: number
+          created_at?: string
+          created_by?: string | null
+          expiry_date?: string
+          id?: string
+          policy_number?: string
+          premium_amount?: number
+          start_date?: string
+          status?: string
+          type?: string
+          updated_at?: string
+          updated_by?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      policy_types: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
         }
         Relationships: []
       }
