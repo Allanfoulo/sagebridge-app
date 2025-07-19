@@ -36,11 +36,11 @@ const RecentTransactions: React.FC = () => {
         .from('sales_invoices')
         .select(`
           id,
-          invoice_date,
-          total,
+          issue_date,
+          total_amount,
           customers(name)
         `)
-        .order('invoice_date', { ascending: false })
+        .order('issue_date', { ascending: false })
         .limit(3);
 
       if (salesError) throw salesError;
@@ -66,10 +66,10 @@ const RecentTransactions: React.FC = () => {
       salesInvoices?.forEach(invoice => {
         combinedTransactions.push({
           id: `sales-${invoice.id}`,
-          date: invoice.invoice_date,
+          date: invoice.issue_date,
           description: `Invoice - ${invoice.customers?.name || 'Unknown Customer'}`,
           category: 'Sales',
-          amount: `+R${Number(invoice.total).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`,
+          amount: `+R${Number(invoice.total_amount).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`,
           type: 'income',
           invoiceId: invoice.id // Store the actual invoice ID for navigation
         });

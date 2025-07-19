@@ -12,14 +12,13 @@ interface InvoiceItem {
   description: string;
   quantity: number;
   unit_price: number;
-  tax_percent: number;
-  line_total: number;
+  total_price: number;
 }
 
 interface InvoiceData {
   id: string;
   invoice_number: string;
-  invoice_date: string;
+  issue_date: string;
   due_date: string;
   customer: {
     name: string;
@@ -29,11 +28,9 @@ interface InvoiceData {
   };
   items: InvoiceItem[];
   subtotal: number;
-  tax_total: number;
-  total: number;
-  currency: string;
+  tax_amount: number;
+  total_amount: number;
   status: string;
-  payment_terms?: string;
   notes?: string;
 }
 
@@ -62,14 +59,12 @@ const InvoiceReport: React.FC<InvoiceReportProps> = ({ invoiceId, onClose }) => 
         .select(`
           id,
           invoice_number,
-          invoice_date,
+          issue_date,
           due_date,
           subtotal,
-          tax_total,
-          total,
-          currency,
+          tax_amount,
+          total_amount,
           status,
-          payment_terms,
           notes,
           customers(name, email, phone, address)
         `)
@@ -215,7 +210,7 @@ const InvoiceReport: React.FC<InvoiceReportProps> = ({ invoiceId, onClose }) => 
                 <th>Description</th>
                 <th class="text-center">Qty</th>
                 <th class="text-right">Unit Price</th>
-                <th class="text-right">Tax %</th>
+
                 <th class="text-right">Total</th>
               </tr>
             </thead>
@@ -224,9 +219,8 @@ const InvoiceReport: React.FC<InvoiceReportProps> = ({ invoiceId, onClose }) => 
                 <tr>
                   <td>${item.description}</td>
                   <td class="text-center">${item.quantity}</td>
-                  <td class="text-right">${getCurrencySymbol(invoice.currency)}${item.unit_price.toFixed(2)}</td>
-                  <td class="text-right">${item.tax_percent}%</td>
-                  <td class="text-right">${getCurrencySymbol(invoice.currency)}${item.line_total.toFixed(2)}</td>
+                  <td class="text-right">$${item.unit_price.toFixed(2)}</td>
+                  <td class="text-right">$${item.total_price.toFixed(2)}</td>
                 </tr>
               `).join('')}
             </tbody>
@@ -235,15 +229,15 @@ const InvoiceReport: React.FC<InvoiceReportProps> = ({ invoiceId, onClose }) => 
           <div class="totals">
             <div>
               <span>Subtotal:</span>
-              <span>${getCurrencySymbol(invoice.currency)}${invoice.subtotal.toFixed(2)}</span>
+              <span>$${invoice.subtotal.toFixed(2)}</span>
             </div>
             <div>
               <span>Tax:</span>
-              <span>${getCurrencySymbol(invoice.currency)}${invoice.tax_total.toFixed(2)}</span>
+              <span>$${invoice.tax_amount.toFixed(2)}</span>
             </div>
             <div class="total-line">
               <span>Total:</span>
-              <span>${getCurrencySymbol(invoice.currency)}${invoice.total.toFixed(2)}</span>
+              <span>$${invoice.total_amount.toFixed(2)}</span>
             </div>
           </div>
 
@@ -398,18 +392,13 @@ const InvoiceReport: React.FC<InvoiceReportProps> = ({ invoiceId, onClose }) => 
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Invoice Date:</span>
-                    <span>{new Date(invoice.invoice_date).toLocaleDateString()}</span>
+                    <span>{new Date(invoice.issue_date).toLocaleDateString()}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Due Date:</span>
                     <span>{new Date(invoice.due_date).toLocaleDateString()}</span>
                   </div>
-                  {invoice.payment_terms && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Payment Terms:</span>
-                      <span>{invoice.payment_terms}</span>
-                    </div>
-                  )}
+
                 </div>
               </div>
             </div>
@@ -427,7 +416,7 @@ const InvoiceReport: React.FC<InvoiceReportProps> = ({ invoiceId, onClose }) => 
                     <th className="text-left py-2 font-medium">Description</th>
                     <th className="text-center py-2 font-medium">Qty</th>
                     <th className="text-right py-2 font-medium">Unit Price</th>
-                    <th className="text-right py-2 font-medium">Tax %</th>
+
                     <th className="text-right py-2 font-medium">Total</th>
                   </tr>
                 </thead>
@@ -437,11 +426,10 @@ const InvoiceReport: React.FC<InvoiceReportProps> = ({ invoiceId, onClose }) => 
                       <td className="py-3">{item.description}</td>
                       <td className="py-3 text-center">{item.quantity}</td>
                       <td className="py-3 text-right">
-                        {getCurrencySymbol(invoice.currency)}{item.unit_price.toFixed(2)}
+                        ${item.unit_price.toFixed(2)}
                       </td>
-                      <td className="py-3 text-right">{item.tax_percent}%</td>
                       <td className="py-3 text-right font-medium">
-                        {getCurrencySymbol(invoice.currency)}{item.line_total.toFixed(2)}
+                        ${item.total_price.toFixed(2)}
                       </td>
                     </tr>
                   ))}
@@ -456,16 +444,16 @@ const InvoiceReport: React.FC<InvoiceReportProps> = ({ invoiceId, onClose }) => 
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Subtotal:</span>
-                  <span>{getCurrencySymbol(invoice.currency)}{invoice.subtotal.toFixed(2)}</span>
+                  <span>${invoice.subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Tax:</span>
-                  <span>{getCurrencySymbol(invoice.currency)}{invoice.tax_total.toFixed(2)}</span>
+                  <span>${invoice.tax_amount.toFixed(2)}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between font-bold text-lg">
                   <span>Total:</span>
-                  <span>{getCurrencySymbol(invoice.currency)}{invoice.total.toFixed(2)}</span>
+                  <span>${invoice.total_amount.toFixed(2)}</span>
                 </div>
               </div>
             </div>

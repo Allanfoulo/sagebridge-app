@@ -23,6 +23,16 @@ interface PurchaseInvoice {
   status: string;
 }
 
+interface PurchaseStats {
+  totalInvoices: number;
+  paidInvoices: number;
+  unpaidInvoices: number;
+  overdueInvoices: number;
+  totalExpenses: number;
+  pendingExpenses: number;
+  topSuppliers: { name: string; amount: number }[];
+}
+
 const Purchases: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -30,18 +40,20 @@ const Purchases: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-
-  // Sample expense categories for the dashboard
-  const expenseCategories = [
-    { name: 'Office Supplies', amount: 2450 },
-    { name: 'Software & IT', amount: 3870 },
-    { name: 'Marketing', amount: 5340 },
-    { name: 'Travel', amount: 1230 },
-    { name: 'Utilities', amount: 890 }
-  ];
+  const [stats, setStats] = useState<PurchaseStats>({
+    totalInvoices: 0,
+    paidInvoices: 0,
+    unpaidInvoices: 0,
+    overdueInvoices: 0,
+    totalExpenses: 0,
+    pendingExpenses: 0,
+    topSuppliers: []
+  });
+  const [statsLoading, setStatsLoading] = useState(true);
 
   useEffect(() => {
     fetchInvoices();
+    fetchPurchaseStats();
   }, []);
 
   const fetchInvoices = async () => {
@@ -73,6 +85,71 @@ const Purchases: React.FC = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPurchaseStats = async () => {
+    try {
+      setStatsLoading(true);
+
+      // Fetch all supplier invoices with supplier details
+      const { data: invoices, error } = await supabase
+        .from('supplier_invoices')
+        .select(`
+          id, 
+          status, 
+          total_amount, 
+          due_date,
+          supplier:supplier_id (name)
+        `);
+
+      if (error) throw error;
+
+      if (invoices) {
+        const today = new Date();
+        const paidInvoices = invoices.filter(inv => inv.status === 'Paid');
+        const unpaidInvoices = invoices.filter(inv => inv.status !== 'Paid');
+        const overdueInvoices = invoices.filter(inv => 
+          inv.status !== 'Paid' && new Date(inv.due_date) < today
+        );
+
+        const totalExpenses = paidInvoices.reduce((sum, inv) => sum + Number(inv.total_amount), 0);
+        const pendingExpenses = unpaidInvoices.reduce((sum, inv) => sum + Number(inv.total_amount), 0);
+
+        // Calculate top suppliers by total amount
+        const supplierTotals = invoices.reduce((acc, inv) => {
+          const supplierName = inv.supplier?.name || 'Unknown Supplier';
+          if (!acc[supplierName]) {
+            acc[supplierName] = 0;
+          }
+          acc[supplierName] += Number(inv.total_amount);
+          return acc;
+        }, {} as Record<string, number>);
+
+        const topSuppliers = Object.entries(supplierTotals)
+          .map(([name, amount]) => ({ name, amount }))
+          .sort((a, b) => b.amount - a.amount)
+          .slice(0, 5);
+
+        setStats({
+          totalInvoices: invoices.length,
+          paidInvoices: paidInvoices.length,
+          unpaidInvoices: unpaidInvoices.length,
+          overdueInvoices: overdueInvoices.length,
+          totalExpenses,
+          pendingExpenses,
+          topSuppliers
+        });
+      }
+    } catch (error: any) {
+      console.error('Error fetching purchase stats:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to load purchase statistics',
+      });
+    } finally {
+      setStatsLoading(false);
     }
   };
 
@@ -164,16 +241,65 @@ const Purchases: React.FC = () => {
                 Supplier Management
               </Button>
               
+              {/* Purchase Statistics */}
               <div className="pt-4 border-t border-sage-lightGray">
-                <h4 className="font-medium text-sm mb-3">Expense Categories</h4>
-                <div className="space-y-2">
-                  {expenseCategories.map((category) => (
-                    <div key={category.name} className="flex justify-between items-center text-sm">
-                      <span>{category.name}</span>
-                      <span className="text-muted-foreground">R{category.amount}</span>
+                <h4 className="font-medium text-sm mb-3">Purchase Overview</h4>
+                {statsLoading ? (
+                  <div className="space-y-2">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="h-6 bg-gray-100 rounded animate-pulse"></div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Total Expenses</span>
+                      <span className="font-medium text-red-600">
+                        R{stats.totalExpenses.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
+                      </span>
                     </div>
-                  ))}
-                </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Pending Payments</span>
+                      <span className="font-medium text-orange-600">
+                        R{stats.pendingExpenses.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                    {stats.overdueInvoices > 0 && (
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Overdue Bills</span>
+                        <span className="font-medium text-red-600">
+                          {stats.overdueInvoices}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="pt-4 border-t border-sage-lightGray">
+                <h4 className="font-medium text-sm mb-3">Top Suppliers</h4>
+                {statsLoading ? (
+                  <div className="space-y-2">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="h-6 bg-gray-100 rounded animate-pulse"></div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {stats.topSuppliers.length > 0 ? (
+                      stats.topSuppliers.map((supplier) => (
+                        <div key={supplier.name} className="flex justify-between items-center text-sm">
+                          <span className="text-gray-600 truncate">{supplier.name}</span>
+                          <span className="text-muted-foreground font-medium">
+                            R{supplier.amount.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-sm text-gray-500">No supplier data available</div>
+                    )}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -235,7 +361,7 @@ const Purchases: React.FC = () => {
                             <td className="py-3 text-sm">{invoice.supplier?.name || 'Unknown'}</td>
                             <td className="py-3 text-sm">{new Date(invoice.issue_date).toLocaleDateString()}</td>
                             <td className="py-3 text-sm">{new Date(invoice.due_date).toLocaleDateString()}</td>
-                            <td className="py-3 text-sm font-medium">${invoice.total_amount.toFixed(2)}</td>
+                            <td className="py-3 text-sm font-medium">R{invoice.total_amount.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}</td>
                             <td className="py-3 text-sm">
                               <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getStatusColor(invoice.status)}`}>
                                 {invoice.status}
