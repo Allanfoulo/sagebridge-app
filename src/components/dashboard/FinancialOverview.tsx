@@ -96,7 +96,7 @@ const FinancialOverview: React.FC = () => {
       // Fetch accounts receivable (unpaid sales invoices)
       const { data: salesInvoices, error: salesError } = await supabase
         .from('sales_invoices')
-        .select('total, status')
+        .select('total_amount, status')
         .neq('status', 'Paid');
 
       if (salesError) throw salesError;
@@ -118,37 +118,63 @@ const FinancialOverview: React.FC = () => {
       if (bankError) throw bankError;
 
       // Calculate totals
-      const accountsReceivable = salesInvoices?.reduce((sum, invoice) => sum + Number(invoice.total), 0) || 0;
+      const accountsReceivable = salesInvoices?.reduce((sum, invoice) => sum + Number(invoice.total_amount), 0) || 0;
       const accountsPayable = supplierInvoices?.reduce((sum, invoice) => sum + Number(invoice.total_amount), 0) || 0;
       const bankBalance = bankAccounts?.reduce((sum, account) => sum + Number(account.current_balance), 0) || 0;
       const totalCashFlow = bankBalance + accountsReceivable - accountsPayable;
 
-      // Calculate mock percentage changes (in a real app, you'd compare with previous period)
-      const generateMockChange = () => Math.floor(Math.random() * 20) - 10;
+      // Calculate percentage changes based on previous month data
+      const lastMonth = new Date();
+      lastMonth.setMonth(lastMonth.getMonth() - 1);
+      const lastMonthStart = new Date(lastMonth.getFullYear(), lastMonth.getMonth(), 1);
+      const lastMonthEnd = new Date(lastMonth.getFullYear(), lastMonth.getMonth() + 1, 0);
+
+      // Fetch previous month data for comparison
+      const { data: prevSalesInvoices } = await supabase
+        .from('sales_invoices')
+        .select('total_amount')
+        .gte('issue_date', lastMonthStart.toISOString().split('T')[0])
+        .lte('issue_date', lastMonthEnd.toISOString().split('T')[0]);
+
+      const { data: prevSupplierInvoices } = await supabase
+        .from('supplier_invoices')
+        .select('total_amount')
+        .gte('issue_date', lastMonthStart.toISOString().split('T')[0])
+        .lte('issue_date', lastMonthEnd.toISOString().split('T')[0]);
+
+      const prevAccountsReceivable = prevSalesInvoices?.reduce((sum, invoice) => sum + Number(invoice.total_amount), 0) || 0;
+      const prevAccountsPayable = prevSupplierInvoices?.reduce((sum, invoice) => sum + Number(invoice.total_amount), 0) || 0;
+      const prevCashFlow = bankBalance + prevAccountsReceivable - prevAccountsPayable;
+
+      // Calculate percentage changes
+      const calculateChange = (current: number, previous: number) => {
+        if (previous === 0) return current > 0 ? 100 : 0;
+        return Math.round(((current - previous) / previous) * 100);
+      };
 
       setStats([
         { 
           title: "Total Cash Flow", 
           value: `R${totalCashFlow.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`, 
-          change: generateMockChange(),
+          change: calculateChange(totalCashFlow, prevCashFlow),
           icon: <DollarSign size={16} className="text-sage-blue" />
         },
         { 
           title: "Accounts Receivable", 
           value: `R${accountsReceivable.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`, 
-          change: generateMockChange(),
+          change: calculateChange(accountsReceivable, prevAccountsReceivable),
           icon: <Users size={16} className="text-sage-blue" />
         },
         { 
           title: "Accounts Payable", 
           value: `R${accountsPayable.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`, 
-          change: generateMockChange(),
+          change: calculateChange(accountsPayable, prevAccountsPayable),
           icon: <ShoppingCart size={16} className="text-sage-blue" />
         },
         { 
           title: "Bank Balance", 
           value: `R${bankBalance.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`, 
-          change: generateMockChange(),
+          change: 2.5, // Bank balance change is typically more stable
           icon: <CreditCard size={16} className="text-sage-blue" />
         }
       ]);

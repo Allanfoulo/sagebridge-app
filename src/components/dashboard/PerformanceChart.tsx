@@ -39,7 +39,7 @@ const PerformanceChart: React.FC = () => {
       // Fetch sales invoices grouped by month
       const { data: salesData, error: salesError } = await supabase
         .from('sales_invoices')
-        .select('invoice_date, total');
+        .select('issue_date, total_amount');
 
       if (salesError) throw salesError;
 
@@ -54,9 +54,9 @@ const PerformanceChart: React.FC = () => {
       const chartData: ChartData[] = months.map(month => {
         // Calculate income for this month
         const monthIncome = salesData?.filter(invoice => {
-          const invoiceDate = new Date(invoice.invoice_date);
+          const invoiceDate = new Date(invoice.issue_date);
           return invoiceDate.getMonth() + 1 === month.month && invoiceDate.getFullYear() === month.year;
-        }).reduce((sum, invoice) => sum + Number(invoice.total), 0) || 0;
+        }).reduce((sum, invoice) => sum + Number(invoice.total_amount), 0) || 0;
 
         // Calculate expenses for this month
         const monthExpenses = supplierData?.filter(invoice => {

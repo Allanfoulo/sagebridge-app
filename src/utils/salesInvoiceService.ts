@@ -25,14 +25,12 @@ type SalesInvoice = {
   id?: string;
   customer_id: string;
   invoice_number: string;
-  invoice_date: string;
+  issue_date: string;
   due_date: string;
-  payment_terms: string;
   subtotal: number;
-  tax_total: number;
-  total: number;
+  tax_amount: number;
+  total_amount: number;
   notes?: string;
-  currency: string;
   status: string;
 }
 
@@ -42,8 +40,7 @@ type SalesInvoiceItem = {
   description: string;
   quantity: number;
   unit_price: number;
-  tax_percent: number;
-  line_total: number;
+  total_price: number;
 }
 
 export const saveInvoice = async (invoice: Invoice) => {
@@ -59,14 +56,12 @@ export const saveInvoice = async (invoice: Invoice) => {
       .insert({
         customer_id: invoice.customer,
         invoice_number: invoice.invoiceNumber,
-        invoice_date: invoice.invoiceDate,
+        issue_date: invoice.invoiceDate,
         due_date: invoice.dueDate,
-        payment_terms: invoice.paymentTerms,
         subtotal,
-        tax_total: taxTotal,
-        total,
+        tax_amount: taxTotal,
+        total_amount: total,
         notes: invoice.notes,
-        currency: invoice.currency,
         status: 'Draft'
       } as SalesInvoice)
       .select('id')
@@ -82,8 +77,7 @@ export const saveInvoice = async (invoice: Invoice) => {
       description: item.description,
       quantity: item.quantity,
       unit_price: item.unitPrice,
-      tax_percent: item.tax,
-      line_total: item.quantity * item.unitPrice
+      total_price: item.quantity * item.unitPrice
     } as SalesInvoiceItem));
 
     const { error: itemsError } = await supabase
@@ -107,13 +101,12 @@ export const fetchInvoices = async () => {
       .select(`
         id, 
         invoice_number, 
-        invoice_date, 
+        issue_date, 
         status, 
-        total, 
-        currency,
+        total_amount,
         customers(name)
       `)
-      .order('invoice_date', { ascending: false });
+      .order('issue_date', { ascending: false });
     
     if (error) throw error;
     
@@ -123,8 +116,8 @@ export const fetchInvoices = async () => {
         id: invoice.id,
         invoiceNumber: invoice.invoice_number,
         customer: invoice.customers?.name || 'Unknown Customer',
-        date: invoice.invoice_date,
-        amount: `${getCurrencySymbol(invoice.currency)}${invoice.total.toFixed(2)}`,
+        date: invoice.issue_date,
+        amount: `$${invoice.total_amount.toFixed(2)}`,
         status: invoice.status
       }))
     };
@@ -142,14 +135,13 @@ export const fetchFilteredInvoices = async (status: string) => {
       .select(`
         id, 
         invoice_number, 
-        invoice_date, 
+        issue_date, 
         status, 
-        total, 
-        currency,
+        total_amount,
         customers(name)
       `)
       .eq('status', status)
-      .order('invoice_date', { ascending: false });
+      .order('issue_date', { ascending: false });
     
     if (error) throw error;
     
@@ -159,8 +151,8 @@ export const fetchFilteredInvoices = async (status: string) => {
         id: invoice.id,
         invoiceNumber: invoice.invoice_number,
         customer: invoice.customers?.name || 'Unknown Customer',
-        date: invoice.invoice_date,
-        amount: `${getCurrencySymbol(invoice.currency)}${invoice.total.toFixed(2)}`,
+        date: invoice.issue_date,
+        amount: `$${invoice.total_amount.toFixed(2)}`,
         status: invoice.status
       }))
     };
