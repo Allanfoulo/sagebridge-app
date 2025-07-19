@@ -49,7 +49,7 @@ const Index: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-            <p className="text-muted-foreground">Welcome back to Contas</p>
+            <p className="text-muted-foreground">Welcome back to Ledger Imperial</p>
           </div>
           <div className="flex items-center gap-2">
             <select className="bg-sage-lightGray border-0 rounded-md text-sm py-2 pl-3 pr-8 focus:ring-1 focus:ring-primary-500">

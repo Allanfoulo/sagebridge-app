@@ -96,7 +96,7 @@ const Auth: React.FC = () => {
             <span className="text-white font-bold text-xl">C</span>
           </div>
         </div>
-        <h2 className="mt-6 text-center text-2xl sm:text-3xl font-extrabold text-gray-900">Contas</h2>
+        <h2 className="mt-6 text-center text-2xl sm:text-3xl font-extrabold text-gray-900">Ledger Imperial</h2>
         <p className="mt-2 text-center text-sm text-gray-600">
           Powered by Innovation Imperial
         </p>
@@ -376,7 +376,7 @@ const Auth: React.FC = () => {
           <div className={`${isMobile ? 'flex flex-col space-y-2' : 'grid grid-cols-2 gap-2'} text-sm`}>
             <div className="bg-white px-3 py-2 rounded">
               <span className="block text-xs text-gray-500">Email</span>
-              <span className="font-medium text-sage-darkBlue text-xs sm:text-sm">demo@contas.co.za</span>
+              <span className="font-medium text-sage-darkBlue text-xs sm:text-sm">demo@ledgerimperial.co.za</span>
             </div>
             <div className="bg-white px-3 py-2 rounded">
               <span className="block text-xs text-gray-500">Password</span>

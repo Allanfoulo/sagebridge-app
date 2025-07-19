@@ -103,7 +103,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
             <div className="w-8 h-8 rounded-md bg-white flex items-center justify-center">
               <span className="text-[hsl(var(--sidebar-background))] font-bold text-xl">C</span>
             </div>
-            <span className="font-semibold text-[hsl(var(--sidebar-foreground))] text-lg">Contas</span>
+            <span className="font-semibold text-[hsl(var(--sidebar-foreground))] text-lg">Ledger Imperial</span>
           </motion.div>
         ) : (
           <div className="w-8 h-8 rounded-md bg-white mx-auto flex items-center justify-center">
