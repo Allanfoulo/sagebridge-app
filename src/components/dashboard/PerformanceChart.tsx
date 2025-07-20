@@ -24,9 +24,9 @@ const PerformanceChart: React.FC = () => {
     try {
       setIsLoading(true);
 
-      // Get the last 7 months
+      // Get the last 12 months from present to past
       const months = [];
-      for (let i = 6; i >= 0; i--) {
+      for (let i = 11; i >= 0; i--) {
         const date = new Date();
         date.setMonth(date.getMonth() - i);
         months.push({
@@ -36,33 +36,33 @@ const PerformanceChart: React.FC = () => {
         });
       }
 
-      // Fetch sales invoices grouped by month
-      const { data: salesData, error: salesError } = await supabase
-        .from('sales_invoices')
-        .select('issue_date, total_amount');
+      // Fetch income data grouped by month
+      const { data: incomeData, error: incomeError } = await supabase
+        .from('income')
+        .select('date, amount');
 
-      if (salesError) throw salesError;
+      if (incomeError) throw incomeError;
 
-      // Fetch supplier invoices grouped by month
-      const { data: supplierData, error: supplierError } = await supabase
-        .from('supplier_invoices')
-        .select('issue_date, total_amount');
+      // Fetch expenses data grouped by month
+      const { data: expensesData, error: expensesError } = await supabase
+        .from('expenses')
+        .select('date, amount');
 
-      if (supplierError) throw supplierError;
+      if (expensesError) throw expensesError;
 
       // Process data by month
       const chartData: ChartData[] = months.map(month => {
         // Calculate income for this month
-        const monthIncome = salesData?.filter(invoice => {
-          const invoiceDate = new Date(invoice.issue_date);
-          return invoiceDate.getMonth() + 1 === month.month && invoiceDate.getFullYear() === month.year;
-        }).reduce((sum, invoice) => sum + Number(invoice.total_amount), 0) || 0;
+        const monthIncome = incomeData?.filter(record => {
+          const recordDate = new Date(record.date);
+          return recordDate.getMonth() + 1 === month.month && recordDate.getFullYear() === month.year;
+        }).reduce((sum, record) => sum + Number(record.amount), 0) || 0;
 
         // Calculate expenses for this month
-        const monthExpenses = supplierData?.filter(invoice => {
-          const invoiceDate = new Date(invoice.issue_date);
-          return invoiceDate.getMonth() + 1 === month.month && invoiceDate.getFullYear() === month.year;
-        }).reduce((sum, invoice) => sum + Number(invoice.total_amount), 0) || 0;
+        const monthExpenses = expensesData?.filter(record => {
+          const recordDate = new Date(record.date);
+          return recordDate.getMonth() + 1 === month.month && recordDate.getFullYear() === month.year;
+        }).reduce((sum, record) => sum + Number(record.amount), 0) || 0;
 
         return {
           name: month.name,

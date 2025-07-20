@@ -3,15 +3,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'; 
-import { Moon, Sun, Monitor } from 'lucide-react';
+import { Moon, Sun, Monitor, DollarSign } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTheme } from "next-themes";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 const AppearanceSettings: React.FC = () => {
   const { theme, setTheme } = useTheme();
   const [density, setDensity] = useState<"default" | "comfortable" | "compact">("default");
   const { toast } = useToast();
+  const { currency, setCurrency, availableCurrencies } = useCurrency();
 
   const handleSave = () => {
     toast({
@@ -84,6 +87,25 @@ const AppearanceSettings: React.FC = () => {
               Compact
             </ToggleGroupItem>
           </ToggleGroup>
+        </div>
+        
+        <div className="space-y-2">
+          <Label className="flex items-center gap-2">
+            <DollarSign className="h-4 w-4" />
+            Currency
+          </Label>
+          <Select value={currency} onValueChange={setCurrency}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select currency" />
+            </SelectTrigger>
+            <SelectContent>
+              {availableCurrencies.map((curr) => (
+                <SelectItem key={curr.value} value={curr.value}>
+                  {curr.symbol} - {curr.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         
         <div className="flex justify-end gap-2">

@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { Suspense, useState, useEffect, Component, ReactNode } from "react";
 import React from "react";
@@ -15,6 +16,10 @@ import React from "react";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Sales from "./pages/Sales";
+
+// Onboarding pages
+import Welcome from "./pages/onboarding/Welcome";
+import ProfileSetup from "./pages/onboarding/ProfileSetup";
 import NewInvoice from "./pages/sales/NewInvoice";
 import NewQuote from "./pages/sales/NewQuote";
 import PaidInvoices from "./pages/sales/PaidInvoices";
@@ -152,7 +157,8 @@ const App = () => {
       <ThemeProvider>
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
-            <TooltipProvider>
+            <CurrencyProvider>
+              <TooltipProvider>
               <Toaster />
               <Sonner />
               <BrowserRouter>
@@ -161,6 +167,10 @@ const App = () => {
                     <Routes>
                       {/* Public routes */}
                       <Route path="/auth" element={<Auth />} />
+                      
+                      {/* Onboarding routes */}
+                      <Route path="/onboarding/welcome" element={<ProtectedRoute skipOnboarding><Welcome /></ProtectedRoute>} />
+                      <Route path="/onboarding/profile-setup" element={<ProtectedRoute skipOnboarding><ProfileSetup /></ProtectedRoute>} />
                       
                       {/* Protected routes */}
                       <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
@@ -222,7 +232,8 @@ const App = () => {
                   </AnimatePresence>
                 </Suspense>
               </BrowserRouter>
-            </TooltipProvider>
+              </TooltipProvider>
+            </CurrencyProvider>
           </AuthProvider>
         </QueryClientProvider>
       </ThemeProvider>

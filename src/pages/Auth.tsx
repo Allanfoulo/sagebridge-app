@@ -33,13 +33,13 @@ const Auth: React.FC = () => {
   const [fullName, setFullName] = useState('');
   
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const isMobile = useIsMobile();
   const location = useLocation();
   const navigate = useNavigate();
   const { signIn, signUp, user, loading } = useAuth();
   
   const locationState = location.state as LocationState | null;
-  const successMessage = locationState?.message;
   const returnUrl = locationState?.returnUrl || '/';
   
   // Redirect if already logged in
@@ -77,6 +77,8 @@ const Auth: React.FC = () => {
     
     try {
       await signUp(signupEmail, signupPassword, fullName);
+      // Show success message for email verification
+      setSuccessMessage('Account created successfully! Please check your email to verify your account.');
       setActiveTab('login');
     } catch (error) {
       // Error is already handled by the Auth context
@@ -109,10 +111,10 @@ const Auth: React.FC = () => {
         className="mt-6 sm:mt-8 sm:mx-auto sm:w-full sm:max-w-md"
       >
         <div className="bg-white py-6 sm:py-8 px-4 shadow-card sm:rounded-lg sm:px-10">
-          {successMessage && (
+          {(successMessage || locationState?.message) && (
             <Alert className="mb-4 bg-green-50 border-green-100">
               <CheckCircle className="h-4 w-4 text-green-500" />
-              <AlertDescription className="text-green-700">{successMessage}</AlertDescription>
+              <AlertDescription className="text-green-700">{successMessage || locationState?.message}</AlertDescription>
             </Alert>
           )}
           

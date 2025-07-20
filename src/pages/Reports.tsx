@@ -16,8 +16,10 @@ import {
   Cell
 } from 'recharts';
 import { Download, Calendar, ChevronDown, FileText, BarChart2, PieChart as PieChartIcon, Activity, ArrowRight } from 'lucide-react';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 const Reports: React.FC = () => {
+  const { currencySymbol } = useCurrency();
   const [activeReport, setActiveReport] = useState('profit-loss');
   
   // Sample data for profit & loss chart
@@ -139,9 +141,9 @@ const Reports: React.FC = () => {
                     >
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f2f2f2" />
                       <XAxis dataKey="month" />
-                      <YAxis tickFormatter={(value) => `R${value / 1000}k`} />
+                      <YAxis tickFormatter={(value) => `${currencySymbol}${value / 1000}k`} />
                       <Tooltip 
-                        formatter={(value) => [`R${value.toLocaleString()}`, undefined]}
+                        formatter={(value) => [`${currencySymbol}${value.toLocaleString()}`, undefined]}
                         contentStyle={{ 
                           backgroundColor: 'white', 
                           border: 'none',
@@ -178,7 +180,7 @@ const Reports: React.FC = () => {
                             ))}
                           </Pie>
                           <Tooltip 
-                            formatter={(value) => [`$${value.toLocaleString()}`, undefined]}
+                            formatter={(value) => [`${currencySymbol}${value.toLocaleString()}`, undefined]}
                             contentStyle={{ 
                               backgroundColor: 'white', 
                               border: 'none',
@@ -211,7 +213,7 @@ const Reports: React.FC = () => {
                             ))}
                           </Pie>
                           <Tooltip 
-                            formatter={(value) => [`$${value.toLocaleString()}`, undefined]}
+                            formatter={(value) => [`${currencySymbol}${value.toLocaleString()}`, undefined]}
                             contentStyle={{ 
                               backgroundColor: 'white', 
                               border: 'none',
@@ -238,17 +240,17 @@ const Reports: React.FC = () => {
               <div className="space-y-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Total Revenue</p>
-                  <p className="text-2xl font-bold">R106,000.00</p>
+                  <p className="text-2xl font-bold">{currencySymbol}106,000.00</p>
                   <p className="text-xs text-green-600">↑ 18.5% from last year</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Total Expenses</p>
-                  <p className="text-2xl font-bold">R69,000.00</p>
+                  <p className="text-2xl font-bold">{currencySymbol}69,000.00</p>
                   <p className="text-xs text-amber-600">↑ 12.3% from last year</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Net Profit</p>
-                  <p className="text-2xl font-bold">R37,000.00</p>
+                  <p className="text-2xl font-bold">{currencySymbol}37,000.00</p>
                   <p className="text-xs text-green-600">↑ 22.7% from last year</p>
                 </div>
               </div>
@@ -263,11 +265,11 @@ const Reports: React.FC = () => {
               <div className="space-y-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Sales Tax Collected</p>
-                  <p className="text-2xl font-bold">R8,475.00</p>
+                  <p className="text-2xl font-bold">{currencySymbol}8,475.00</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Estimated Income Tax</p>
-                  <p className="text-2xl font-bold">R9,250.00</p>
+                  <p className="text-2xl font-bold">{currencySymbol}9,250.00</p>
                 </div>
                 <div className="pt-2">
                   <p className="text-xs text-muted-foreground">Next Quarterly Payment Due</p>

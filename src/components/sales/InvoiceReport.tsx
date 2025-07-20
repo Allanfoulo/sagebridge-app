@@ -6,6 +6,7 @@ import { Printer, Download, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { getCurrencySymbol } from '@/utils/salesInvoiceService';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface InvoiceItem {
   id: string;
@@ -44,6 +45,7 @@ const InvoiceReport: React.FC<InvoiceReportProps> = ({ invoiceId, onClose }) => 
   const [isLoading, setIsLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
   const { toast } = useToast();
+  const { formatCurrency } = useCurrency();
 
   useEffect(() => {
     fetchInvoiceDetails();
@@ -219,8 +221,8 @@ const InvoiceReport: React.FC<InvoiceReportProps> = ({ invoiceId, onClose }) => 
                 <tr>
                   <td>${item.description}</td>
                   <td class="text-center">${item.quantity}</td>
-                  <td class="text-right">$${item.unit_price.toFixed(2)}</td>
-                  <td class="text-right">$${item.total_price.toFixed(2)}</td>
+                  <td class="text-right">${formatCurrency(item.unit_price)}</td>
+                  <td class="text-right">${formatCurrency(item.total_price)}</td>
                 </tr>
               `).join('')}
             </tbody>
@@ -229,15 +231,15 @@ const InvoiceReport: React.FC<InvoiceReportProps> = ({ invoiceId, onClose }) => 
           <div class="totals">
             <div>
               <span>Subtotal:</span>
-              <span>$${invoice.subtotal.toFixed(2)}</span>
+              <span>${formatCurrency(invoice.subtotal)}</span>
             </div>
             <div>
               <span>Tax:</span>
-              <span>$${invoice.tax_amount.toFixed(2)}</span>
+              <span>${formatCurrency(invoice.tax_amount)}</span>
             </div>
             <div class="total-line">
               <span>Total:</span>
-              <span>$${invoice.total_amount.toFixed(2)}</span>
+              <span>${formatCurrency(invoice.total_amount)}</span>
             </div>
           </div>
 
@@ -426,10 +428,10 @@ const InvoiceReport: React.FC<InvoiceReportProps> = ({ invoiceId, onClose }) => 
                       <td className="py-3">{item.description}</td>
                       <td className="py-3 text-center">{item.quantity}</td>
                       <td className="py-3 text-right">
-                        ${item.unit_price.toFixed(2)}
+                        {formatCurrency(item.unit_price)}
                       </td>
                       <td className="py-3 text-right font-medium">
-                        ${item.total_price.toFixed(2)}
+                        {formatCurrency(item.total_price)}
                       </td>
                     </tr>
                   ))}
@@ -444,16 +446,16 @@ const InvoiceReport: React.FC<InvoiceReportProps> = ({ invoiceId, onClose }) => 
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Subtotal:</span>
-                  <span>${invoice.subtotal.toFixed(2)}</span>
+                  <span>{formatCurrency(invoice.subtotal)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Tax:</span>
-                  <span>${invoice.tax_amount.toFixed(2)}</span>
+                  <span>{formatCurrency(invoice.tax_amount)}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between font-bold text-lg">
                   <span>Total:</span>
-                  <span>${invoice.total_amount.toFixed(2)}</span>
+                  <span>{formatCurrency(invoice.total_amount)}</span>
                 </div>
               </div>
             </div>

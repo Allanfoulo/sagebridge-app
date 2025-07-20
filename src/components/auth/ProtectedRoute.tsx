@@ -2,19 +2,23 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useProfileCompletion } from '@/hooks/useProfileCompletion';
 
 interface ProtectedRouteProps {
   children: ReactNode;
   requiredPermission?: { module: string; action: string };
   requiredRole?: string;
+  skipOnboarding?: boolean; // Allow skipping onboarding check for onboarding pages
 }
 
 const ProtectedRoute = ({ 
   children, 
   requiredPermission,
-  requiredRole
+  requiredRole,
+  skipOnboarding = false
 }: ProtectedRouteProps) => {
   const { user, loading, hasPermission, hasRole } = useAuth();
+  const { isComplete: profileComplete, loading: profileLoading } = useProfileCompletion();
   const navigate = useNavigate();
   const location = useLocation();
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
@@ -26,7 +30,7 @@ const ProtectedRoute = ({
     const checkAuth = async () => {
       try {
         // Wait for loading to complete
-        if (loading) return;
+        if (loading || profileLoading) return;
 
         // Check if user is authenticated
         if (!user) {
@@ -35,6 +39,17 @@ const ProtectedRoute = ({
             setAuthCheckComplete(true);
             // Redirect to login page with return URL
             navigate('/auth', { state: { returnUrl: location.pathname } });
+          }
+          return;
+        }
+
+        // Check if profile is complete (unless skipping onboarding)
+        if (!skipOnboarding && !profileComplete) {
+          if (mounted) {
+            setIsAuthorized(false);
+            setAuthCheckComplete(true);
+            // Redirect to onboarding welcome page
+            navigate('/onboarding/welcome');
           }
           return;
         }
@@ -81,10 +96,10 @@ const ProtectedRoute = ({
     return () => {
       mounted = false;
     };
-  }, [user, loading, navigate, location.pathname, requiredPermission, requiredRole, hasPermission, hasRole]);
+  }, [user, loading, profileLoading, profileComplete, navigate, location.pathname, requiredPermission, requiredRole, hasPermission, hasRole, skipOnboarding]);
 
   // Show loading spinner while checking authentication
-  if (loading || !authCheckComplete) {
+  if (loading || profileLoading || !authCheckComplete) {
     return (
       <div className="flex flex-col items-center justify-center h-screen">
         <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary"></div>

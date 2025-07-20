@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { updateInvoiceStatus } from '@/utils/salesInvoiceService';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import InvoiceReport from './InvoiceReport';
 
 interface Invoice {
@@ -36,6 +37,7 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({
   onStatusUpdate 
 }) => {
   const { toast } = useToast();
+  const { formatCurrency } = useCurrency();
   const [updatingInvoice, setUpdatingInvoice] = useState<string | null>(null);
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
 
@@ -115,7 +117,7 @@ const InvoiceTable: React.FC<InvoiceTableProps> = ({
                     <td className="py-3 text-sm font-medium">{invoice.invoiceNumber}</td>
                     <td className="py-3 text-sm">{invoice.customer}</td>
                     <td className="py-3 text-sm">{invoice.date}</td>
-                    <td className="py-3 text-sm font-medium">{invoice.amount}</td>
+                    <td className="py-3 text-sm font-medium">{formatCurrency(parseFloat(invoice.amount.replace(/[^0-9.-]+/g, '')))}</td>
                     <td className="py-3 text-sm">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
                         invoice.status === 'Paid' ? 'bg-green-100 text-green-800' :
