@@ -5,15 +5,15 @@
 
 ---
 
-## 🔐 **Authentication & User Management**
+## 🔐 **Authentication & User Management** [Priority: 5]
 
-### Core Authentication
+### Core Authentication [Priority: 5]
 - ✓ User login/logout functionality 
 - ✓ Session management with Supabase
 - ✓ Authentication context and routing protection
 - ✓ Basic user registration
 
-### User Management System
+### User Management System [Priority: 4]
 - [ ] User creation logic (`AddUser.tsx` - TODO comment present)
 - [ ] Password change functionality (`ChangePassword.tsx` - TODO comment present)
 - [ ] Role-based access control implementation
@@ -23,22 +23,35 @@
 
 ---
 
-## 💰 **Core Accounting Features**
+## 💰 **Core Accounting Features** [Priority: 5]
 
-### Chart of Accounts
-- [ ] Account creation logic (`AddAccount.tsx` - TODO comment present)
+### Chart of Accounts [Priority: 5]
+- ✓ Account creation logic (`AddAccount.tsx` - Complete implementation with Supabase integration)
 - ✓ Account management interface (forms exist, submission logic implemented)
-- [ ] Account categorization and hierarchy
-- [ ] Account deletion and modification
+- [x] Account editing functionality (Complete with dialog UI and handlers in `ChartOfAccounts.tsx`)
+- [x] Account deletion functionality (Complete with confirmation dialog and handlers in `ChartOfAccounts.tsx`)
+- [ ] Replace hardcoded sample data with Supabase integration in `ChartOfAccounts.tsx`
+- [x] Account categorization and hierarchy management
+  - [x] Implement category-based filtering and grouping
+  - [x] Add subcategory management
+  - [x] Create account hierarchy visualization
+- [x] Bulk operations (export/import functionality)
+  - [x] CSV export for all accounts
+  - [x] CSV export for selected accounts
+  - [x] CSV import functionality (UI ready, backend integration pending)
+- [x] Account status management (activate/deactivate accounts)
+  - [x] Individual account status toggle
+  - [x] Bulk status change for selected accounts
+  - [x] System account protection
 
-### Journal Entries
+### Journal Entries [Priority: 5]
 - [ ] Journal entry creation (`CreateJournal.tsx` - multiple TODOs)
 - [ ] Draft saving functionality (TODO comment present)
 - P Journal entry interface (UI complete, logic missing)
 - [ ] Journal entry editing and deletion
 - [ ] Automated journal entries
 
-### Financial Operations
+### Financial Operations [Priority: 4]
 - [ ] Real-time financial calculations
 - [ ] Opening balance adjustments (uses sample data)
 - [ ] Account reconciliation (uses sample data)
@@ -47,9 +60,9 @@
 
 ---
 
-## 📊 **Reporting System**
+## 📊 **Reporting System** [Priority: 4]
 
-### Financial Reports
+### Financial Reports [Priority: 4]
 - P Basic report interfaces (UI exists, uses sample data)
 - [ ] Profit & Loss statement with real data
 - [ ] Balance sheet generation
@@ -57,7 +70,7 @@
 - [ ] Accounts receivable aging (currently sample data)
 - [ ] Tax reports with real calculations (`TaxReports.tsx` uses mock data)
 
-### Export Functionality
+### Export Functionality [Priority: 3]
 - [ ] PDF export for reports
 - [ ] Excel/CSV export options
 - [ ] Print-friendly report layouts
@@ -65,14 +78,14 @@
 
 ---
 
-## 🏢 **Supplier Management**
+## 🏢 **Supplier Management** [Priority: 3]
 
-### Basic Operations
+### Basic Operations [Priority: 4]
 - ✓ Supplier creation and basic CRUD
 - P Supplier data management (some placeholder values)
 - ✓ Supplier listing and search
 
-### Advanced Features
+### Advanced Features [Priority: 2]
 - [ ] Supplier categorization (uses mock data in `SuppliersByCategory.tsx`)
 - [ ] Inactive supplier management (uses sample data)
 - [ ] Supplier balance reports (uses mock data)
@@ -81,14 +94,14 @@
 
 ---
 
-## 👥 **Customer Management**
+## 👥 **Customer Management** [Priority: 4]
 
-### Basic Operations
+### Basic Operations [Priority: 4]
 - ✓ Customer creation and basic CRUD
 - P Customer data (placeholder values for `lastOrder` and `avatar`)
 - ✓ Customer listing and search
 
-### Advanced Features
+### Advanced Features [Priority: 2]
 - [ ] Customer credit management
 - [ ] Customer payment history
 - [ ] Customer analytics and reporting
@@ -96,16 +109,16 @@
 
 ---
 
-## 🧾 **Sales & Invoicing**
+## 🧾 **Sales & Invoicing** [Priority: 5]
 
-### Invoice Management
+### Invoice Management [Priority: 5]
 - P Invoice creation (forms complete, email missing)
 - ✓ Invoice data entry and validation
 - [ ] Invoice email functionality ("coming soon" message)
 - [ ] Invoice preview functionality ("coming soon" message)
 - [ ] Recurring invoice setup
 
-### Quote Management
+### Quote Management [Priority: 3]
 - P Quote creation (forms complete, email missing)
 - ✓ Quote data entry and validation
 - [ ] Quote email functionality ("coming soon" message)
@@ -114,15 +127,15 @@
 
 ---
 
-## 💳 **Payment Processing**
+## 💳 **Payment Processing** [Priority: 4]
 
-### Payment Integration
+### Payment Integration [Priority: 4]
 - [ ] Payment gateway integration (Stripe, PayPal, etc.)
 - [ ] Payment method configuration
 - [ ] Automated payment processing
 - [ ] Payment reconciliation
 
-### Payment Tracking
+### Payment Tracking [Priority: 3]
 - P Payment interface (UI exists, uses mock data)
 - [ ] Payment history with real data
 - [ ] Upcoming payments tracking (uses mock data)
@@ -131,15 +144,15 @@
 
 ---
 
-## 🏦 **Banking Module**
+## 🏦 **Banking Module** [Priority: 3]
 
-### Bank Account Management
+### Bank Account Management [Priority: 3]
 - P Banking interface (UI complete, uses sample data)
 - [ ] Real bank account integration
 - [ ] Transaction import from banks
 - [ ] Bank reconciliation with real data
 
-### Transaction Management
+### Transaction Management [Priority: 3]
 - [ ] Manual transaction entry
 - [ ] Automated transaction categorization
 - [ ] Transaction search and filtering
@@ -147,15 +160,15 @@
 
 ---
 
-## 📧 **Email & Communication**
+## 📧 **Email & Communication** [Priority: 4]
 
-### Email Infrastructure
+### Email Infrastructure [Priority: 4]
 - [ ] Email service provider integration (SendGrid, AWS SES, etc.)
 - [ ] Email template system
 - [ ] SMTP configuration
 - [ ] Email delivery tracking
 
-### Document Email Features
+### Document Email Features [Priority: 4]
 - [ ] Invoice email sending
 - [ ] Quote email sending
 - [ ] Payment reminder emails
@@ -163,15 +176,15 @@
 
 ---
 
-## 📄 **Document Management**
+## 📄 **Document Management** [Priority: 3]
 
-### PDF Generation
+### PDF Generation [Priority: 4]
 - [ ] PDF library integration (jsPDF, etc.)
 - [ ] Invoice PDF generation
 - [ ] Quote PDF generation
 - [ ] Report PDF export
 
-### Document Storage
+### Document Storage [Priority: 2]
 - [ ] Cloud storage integration
 - [ ] Document versioning
 - [ ] Document search and retrieval
@@ -179,15 +192,15 @@
 
 ---
 
-## 🔌 **External Integrations**
+## 🔌 **External Integrations** [Priority: 2]
 
-### Third-Party Services
+### Third-Party Services [Priority: 2]
 - [ ] Banking API integration
 - [ ] Tax calculation service integration
 - [ ] Currency exchange rate services
 - [ ] SMS notification services
 
-### Webhook Support
+### Webhook Support [Priority: 2]
 - [ ] Webhook infrastructure
 - [ ] External system notifications
 - [ ] Real-time data synchronization
@@ -195,15 +208,15 @@
 
 ---
 
-## 🗄️ **Database & Data Management**
+## 🗄️ **Database & Data Management** [Priority: 5]
 
-### Database Integration
+### Database Integration [Priority: 5]
 - ✓ Supabase connection and basic queries
 - P Data models (some incomplete, placeholder values)
 - [ ] Complete CRUD operations for all entities
 - [ ] Data validation and sanitization
 
-### Data Migration
+### Data Migration [Priority: 4]
 - P Database migrations (sample data instead of production schema)
 - [ ] Production-ready data schema
 - [ ] Data backup and recovery
@@ -211,9 +224,9 @@
 
 ---
 
-## 🔒 **Security & Compliance**
+## 🔒 **Security & Compliance** [Priority: 4]
 
-### Security Implementation
+### Security Implementation [Priority: 5]
 - ✓ Basic authentication security
 - P Authorization (role-based access needs completion)
 - ✓ Form validation (client-side)
@@ -221,7 +234,7 @@
 - [ ] CSRF protection
 - [ ] Audit trail implementation
 
-### Compliance Features
+### Compliance Features [Priority: 3]
 - [ ] Data encryption for sensitive information
 - [ ] GDPR compliance features
 - [ ] Financial regulation compliance
@@ -229,15 +242,15 @@
 
 ---
 
-## 🚀 **Performance & Optimization**
+## 🚀 **Performance & Optimization** [Priority: 2]
 
-### Performance Features
+### Performance Features [Priority: 2]
 - [ ] Caching strategies implementation
 - [ ] Database query optimization
 - [ ] Real-time updates with WebSockets
 - [ ] Performance monitoring
 
-### Scalability
+### Scalability [Priority: 1]
 - [ ] Load balancing considerations
 - [ ] Database scaling strategies
 - [ ] CDN integration for assets
@@ -245,15 +258,15 @@
 
 ---
 
-## 🧪 **Testing & Quality Assurance**
+## 🧪 **Testing & Quality Assurance** [Priority: 3]
 
-### Testing Infrastructure
+### Testing Infrastructure [Priority: 3]
 - [ ] Unit testing suite
 - [ ] Integration testing
 - [ ] End-to-end testing
 - [ ] Performance testing
 
-### Code Quality
+### Code Quality [Priority: 3]
 - ✓ TypeScript implementation
 - ✓ ESLint configuration
 - [ ] Code coverage reporting
@@ -261,15 +274,15 @@
 
 ---
 
-## 📚 **Documentation & Training**
+## 📚 **Documentation & Training** [Priority: 2]
 
-### Technical Documentation
+### Technical Documentation [Priority: 2]
 - [ ] API documentation
 - [ ] Database schema documentation
 - [ ] Deployment guides
 - [ ] Troubleshooting guides
 
-### User Documentation
+### User Documentation [Priority: 2]
 - [ ] User manual creation
 - [ ] Feature tutorials
 - [ ] Video training materials
@@ -277,15 +290,15 @@
 
 ---
 
-## 📈 **Analytics & Monitoring**
+## 📈 **Analytics & Monitoring** [Priority: 2]
 
-### Business Analytics
+### Business Analytics [Priority: 2]
 - [ ] Financial KPI tracking
 - [ ] User behavior analytics
 - [ ] Performance metrics dashboard
 - [ ] Custom report builder
 
-### System Monitoring
+### System Monitoring [Priority: 3]
 - [ ] Application performance monitoring
 - [ ] Error tracking and logging
 - [ ] Uptime monitoring
@@ -293,15 +306,15 @@
 
 ---
 
-## 🌐 **Multi-tenancy & Localization**
+## 🌐 **Multi-tenancy & Localization** [Priority: 1]
 
-### Multi-tenancy
+### Multi-tenancy [Priority: 1]
 - [ ] Multi-company support
 - [ ] Data isolation between tenants
 - [ ] Tenant-specific configurations
 - [ ] Billing per tenant
 
-### Localization
+### Localization [Priority: 2]
 - [ ] Multi-language support
 - [ ] Multi-currency handling
 - [ ] Regional tax calculations
