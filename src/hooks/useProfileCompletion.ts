@@ -37,11 +37,22 @@ export const useProfileCompletion = (): ProfileCompletionStatus => {
           // Profile doesn't exist yet, so it's not complete
           setIsComplete(false);
         } else {
-          // Check if all required fields are present
+          // Check if all required fields are present and not empty strings
           const isProfileComplete = !!
             (profile?.first_name && 
              profile?.last_name && 
-             profile?.user_type);
+             profile?.user_type &&
+             profile.first_name.trim() !== '' &&
+             profile.last_name.trim() !== '' &&
+             profile.user_type.trim() !== '');
+          
+          console.log('Profile completion check:', {
+            profile,
+            isProfileComplete,
+            first_name: profile?.first_name,
+            last_name: profile?.last_name,
+            user_type: profile?.user_type
+          });
           
           setIsComplete(isProfileComplete);
         }

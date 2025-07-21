@@ -23,23 +23,30 @@ const ProfileDebugger: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchProfile = async () => {
+  const fetchProfile = async (forceRefresh = false) => {
     if (!user) return;
 
     setLoading(true);
     setError(null);
 
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('profiles')
         .select('*')
-        .eq('id', user.id)
-        .maybeSingle();
+        .eq('id', user.id);
+      
+      // Force refresh by adding a timestamp to bypass any caching
+      if (forceRefresh) {
+        query = query.limit(1);
+      }
+      
+      const { data, error } = await query.maybeSingle();
 
       if (error) {
         setError(error.message);
       } else {
         setProfileData(data);
+        console.log('Fetched profile data:', data);
       }
     } catch (err: any) {
       setError(err.message);
@@ -62,15 +69,25 @@ const ProfileDebugger: React.FC = () => {
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           Profile Debug Information
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={fetchProfile}
-            disabled={loading}
-          >
-            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fetchProfile(false)}
+              disabled={loading}
+            >
+              <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fetchProfile(true)}
+              disabled={loading}
+            >
+              Force Refresh
+            </Button>
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
