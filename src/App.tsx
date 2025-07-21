@@ -42,6 +42,9 @@ import MyAccount from './pages/administration/MyAccount';
 import AddCustomer from './pages/AddCustomer';
 import NewPurchaseInvoice from './pages/purchases/NewPurchaseInvoice';
 
+// Debug pages
+import ProfileDebug from './pages/debug/ProfileDebug';
+
 // Accounting pages
 import Accounting from './pages/Accounting';
 import ChartOfAccounts from './pages/accounting/ChartOfAccounts';
@@ -225,6 +228,9 @@ const App = () => {
                       <Route path="/accounting/adjust-opening-balance" element={<ProtectedRoute><AdjustOpeningBalance /></ProtectedRoute>} />
                       <Route path="/accounting/tax-reports" element={<ProtectedRoute><TaxReports /></ProtectedRoute>} />
                       <Route path="/accounting/period-end" element={<ProtectedRoute><PeriodEnd /></ProtectedRoute>} />
+                      
+                      {/* Debug Routes */}
+                      <Route path="/debug/profile" element={<ProtectedRoute skipOnboarding><ProfileDebug /></ProtectedRoute>} />
                       
                       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                       <Route path="*" element={<NotFound />} />
