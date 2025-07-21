@@ -1,8 +1,9 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { assignDefaultRole, createDefaultRoles } from '@/utils/checkRoleAssignments';
 
 interface UserRole {
   id: string;
@@ -48,7 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .from('user_role_assignments')
         .select(`
           role_id,
-          roles:user_roles!role_id(
+          user_roles!user_role_assignments_role_id_fkey(
             id,
             name,
             description
@@ -62,7 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       // Extract role objects and set them
-      const roles = rolesData.map(item => item.roles) as UserRole[];
+      const roles = rolesData.map(item => item.user_roles) as UserRole[];
       setUserRoles(roles);
 
       // Get role IDs for permission lookup
@@ -162,7 +163,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signUp({ 
+      
+      // Ensure default roles exist
+      await createDefaultRoles();
+      
+      const { data, error } = await supabase.auth.signUp({ 
         email, 
         password,
         options: {
@@ -174,6 +179,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (error) {
         throw error;
+      }
+      
+      // If user was created successfully, assign default role
+      if (data.user) {
+        await assignDefaultRole(data.user.id, 'User');
       }
       
       toast({

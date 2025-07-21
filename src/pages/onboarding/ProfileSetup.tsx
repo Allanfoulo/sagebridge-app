@@ -58,18 +58,22 @@ const ProfileSetup: React.FC = () => {
     try {
       const fullName = `${data.firstName} ${data.lastName}`;
       
-      // Update the profile with complete information
+      // Use upsert to create or update the profile
       const { error } = await supabase
         .from('profiles')
-        .update({
+        .upsert({
+          id: user.id,
+          email: user.email || '',
           full_name: fullName,
           first_name: data.firstName,
           last_name: data.lastName,
           phone: data.phone || null,
           user_type: data.userType,
+          created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-        })
-        .eq('id', user.id);
+        }, {
+          onConflict: 'id'
+        });
 
       if (error) {
         throw error;

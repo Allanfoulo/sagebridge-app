@@ -15,45 +15,46 @@ export const useProfileCompletion = (): ProfileCompletionStatus => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const checkProfileCompletion = async () => {
+    const fetchProfileCompletion = async () => {
       if (!user) {
+        setIsComplete(false);
         setLoading(false);
         return;
       }
 
       try {
-        setLoading(true);
-        setError(null);
-
-        const { data, error: fetchError } = await supabase
+        const { data: profile, error } = await supabase
           .from('profiles')
           .select('first_name, last_name, user_type')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
-        if (fetchError) {
-          throw fetchError;
+        if (error) {
+          console.error('Error fetching profile:', error);
+          setError(error.message);
+          setIsComplete(false);
+        } else if (!profile) {
+          // Profile doesn't exist yet, so it's not complete
+          setIsComplete(false);
+        } else {
+          // Check if all required fields are present
+          const isProfileComplete = !!
+            (profile?.first_name && 
+             profile?.last_name && 
+             profile?.user_type);
+          
+          setIsComplete(isProfileComplete);
         }
-
-        // Check if essential profile fields are completed
-        const profileComplete = !!
-          data &&
-          data.first_name &&
-          data.last_name &&
-          data.user_type;
-
-        setIsComplete(profileComplete);
       } catch (err: any) {
-        console.error('Error checking profile completion:', err);
-        setError(err.message || 'Failed to check profile completion');
-        // If there's an error fetching profile, assume it's not complete
+        console.error('Error in fetchProfileCompletion:', err);
+        setError(err.message);
         setIsComplete(false);
       } finally {
         setLoading(false);
       }
     };
 
-    checkProfileCompletion();
+    fetchProfileCompletion();
   }, [user]);
 
   return { isComplete, loading, error };

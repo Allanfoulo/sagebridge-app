@@ -42,6 +42,8 @@ import {
 } from '@/components/ui/tooltip';
 import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Define the schema for account form
 const accountFormSchema = z.object({
@@ -77,6 +79,8 @@ type AccountFormValues = z.infer<typeof accountFormSchema>;
 
 const AddAccount = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   
   // Define form with default values
   const form = useForm<AccountFormValues>({
@@ -112,19 +116,96 @@ const AddAccount = () => {
   const isBankAccount = form.watch('bankDetails.isBankAccount');
   
   // Form submission handler
-  const onSubmit = (data: AccountFormValues) => {
-    // TODO: Implement the actual account creation logic
+  const onSubmit = async (data: AccountFormValues) => {
+    if (!user) {
+      toast({
+        title: 'Authentication required',
+        description: 'You must be logged in to create an account.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
     
-    console.log('Form data:', data);
-    
-    // Show success message
-    toast({
-      title: 'Account created successfully',
-      description: `${data.accountName} has been added to your chart of accounts.`,
-    });
-    
-    // Redirect to chart of accounts
-    navigate('/accounting/chart-of-accounts');
+    try {
+      // Prepare account data for database insertion
+      const accountData = {
+        name: data.accountName,
+        account_number: data.accountNumber,
+        description: data.accountDescription || null,
+        type: data.category, // Using category as the main type
+        balance: data.openingBalance ? parseFloat(data.openingBalance) : 0,
+        is_active: data.isActive,
+        created_by: user.id,
+      };
+
+      // Insert account into chart_of_accounts table
+      const { data: insertedAccount, error } = await supabase
+        .from('chart_of_accounts')
+        .insert([accountData])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating account:', error);
+        toast({
+          title: 'Error creating account',
+          description: error.message || 'An unexpected error occurred.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // If it's a bank account, also create entry in bank_accounts table
+      if (data.bankDetails.isBankAccount && insertedAccount) {
+        const bankAccountData = {
+          account_name: data.accountName,
+          bank_name: data.bankDetails.bankName || '',
+          account_number: data.bankDetails.accountNumber || null,
+          routing_number: data.bankDetails.branchCode || null,
+          account_type: data.accountType,
+          currency: data.currencyCode,
+          opening_balance: data.openingBalance ? parseFloat(data.openingBalance) : 0,
+          current_balance: data.openingBalance ? parseFloat(data.openingBalance) : 0,
+          is_active: data.isActive,
+          created_by: user.id,
+        };
+
+        const { error: bankError } = await supabase
+          .from('bank_accounts')
+          .insert([bankAccountData]);
+
+        if (bankError) {
+          console.error('Error creating bank account:', bankError);
+          // Note: We don't return here as the main account was created successfully
+          toast({
+            title: 'Account created with warning',
+            description: 'Account created but bank details could not be saved.',
+            variant: 'destructive',
+          });
+        }
+      }
+
+      // Show success message
+      toast({
+        title: 'Account created successfully',
+        description: `${data.accountName} has been added to your chart of accounts.`,
+      });
+      
+      // Redirect to chart of accounts
+      navigate('/accounting/chart-of-accounts');
+      
+    } catch (error) {
+      console.error('Unexpected error:', error);
+      toast({
+        title: 'Error creating account',
+        description: 'An unexpected error occurred. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -595,7 +676,9 @@ const AddAccount = () => {
                   >
                     Cancel
                   </Button>
-                  <Button type="submit">Save Account</Button>
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? 'Creating Account...' : 'Save Account'}
+                  </Button>
                 </div>
               </form>
             </Form>
