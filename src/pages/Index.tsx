@@ -6,6 +6,7 @@ import RecentTransactions from '@/components/dashboard/RecentTransactions';
 import UpcomingPayments from '@/components/dashboard/UpcomingPayments';
 import PerformanceChart from '@/components/dashboard/PerformanceChart';
 import SystemStatus from '@/components/diagnostics/SystemStatus';
+import ProfileDebugger from '@/components/debug/ProfileDebugger';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
@@ -65,6 +66,9 @@ const Index: React.FC = () => {
         </div>
         
         <div className="space-y-6">
+          {/* Temporary debug component to diagnose profile completion issue */}
+          <ProfileDebugger />
+          
           <FinancialOverview />
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
