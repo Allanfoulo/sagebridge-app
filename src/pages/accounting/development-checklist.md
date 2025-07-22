@@ -45,9 +45,9 @@
   - [x] System account protection
 
 ### Journal Entries [Priority: 5]
-- [ ] Journal entry creation (`CreateJournal.tsx` - multiple TODOs)
-- [ ] Draft saving functionality (TODO comment present)
-- P Journal entry interface (UI complete, logic missing)
+- [x] Journal entry creation (`CreateJournal.tsx` - implemented with full functionality)
+- [x] Draft saving functionality (implemented with proper validation)
+- [x] Journal entry interface (UI complete, logic implemented)
 - [ ] Journal entry editing and deletion
 - [ ] Automated journal entries
 

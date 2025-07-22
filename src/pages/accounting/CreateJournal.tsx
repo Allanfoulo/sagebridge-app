@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
@@ -55,6 +55,8 @@ import { format } from 'date-fns';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { createJournalEntry, saveJournalAsDraft, createRecurringJournalEntry, getAccountsForJournal } from '@/services/journalService';
 
 // Define the schema for journal entry
 const journalLineSchema = z.object({
@@ -84,8 +86,8 @@ const journalFormSchema = z.object({
 
 type JournalFormValues = z.infer<typeof journalFormSchema>;
 
-// Sample accounts data
-const accounts = [
+// Sample accounts data - will be replaced with API data
+const defaultAccounts = [
   { value: "10001", label: "Cash" },
   { value: "10002", label: "Accounts Receivable" },
   { value: "10003", label: "Inventory" },
@@ -116,7 +118,11 @@ const taxCodes = [
 
 const CreateJournal = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'standard' | 'recurring'>('standard');
+  const [accounts, setAccounts] = useState(defaultAccounts);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   
   // Form definition
   const form = useForm<JournalFormValues>({
@@ -145,6 +151,27 @@ const CreateJournal = () => {
     control: form.control,
     name: "lines",
   });
+  
+  // Load accounts on component mount
+   useEffect(() => {
+     const loadAccounts = async () => {
+       try {
+         const result = await getAccountsForJournal();
+         if (result.success && result.data) {
+           const formattedAccounts = result.data.map(account => ({
+             value: account.id,
+             label: `${account.account_number} - ${account.name}`
+           }));
+           setAccounts(formattedAccounts);
+         }
+       } catch (error) {
+         console.error('Failed to load accounts:', error);
+         // Keep using default accounts if API fails
+       }
+     };
+     
+     loadAccounts();
+   }, []);
   
   // Watch isRecurring value
   const isRecurring = form.watch('isRecurring');
@@ -180,7 +207,7 @@ const CreateJournal = () => {
   
   const totals = calculateTotals();
   
-  const onSubmit = (data: JournalFormValues) => {
+  const onSubmit = async (data: JournalFormValues) => {
     // Validate debits equal credits
     if (!totals.isBalanced) {
       toast({
@@ -191,17 +218,71 @@ const CreateJournal = () => {
       return;
     }
     
-    // TODO: Implement the actual journal entry creation logic
-    console.log('Form data:', data);
-    
-    // Show success message
-    toast({
-      title: data.isRecurring ? 'Recurring journal created' : 'Journal entry created',
-      description: `${data.reference} has been saved successfully.`,
-    });
-    
-    // Redirect back to journals
-    navigate('/accounting/journals');
+    if (!user) {
+       toast({
+         title: 'Authentication required',
+         description: 'You must be logged in to create a journal entry.',
+         variant: 'destructive',
+       });
+       return;
+     }
+
+     setIsLoading(true);
+     
+     try {
+       // Map form data to service interface
+       const journalData = {
+         date: data.date,
+         reference: data.reference,
+         description: data.description,
+         lines: data.lines.map(line => ({
+           account_id: line.account,
+           description: line.description,
+           debit_amount: line.debit ? parseFloat(line.debit) : undefined,
+           credit_amount: line.credit ? parseFloat(line.credit) : undefined,
+         })),
+       };
+
+       let result;
+       if (data.isRecurring && data.recurring) {
+         result = await createRecurringJournalEntry({
+           ...journalData,
+           recurring: {
+             frequency: data.recurring.frequency as any,
+             start_date: data.recurring.startDate!,
+             end_date: data.recurring.endDate,
+             occurrences: data.recurring.occurrences ? parseInt(data.recurring.occurrences) : undefined,
+           }
+         }, user.id);
+       } else {
+         result = await createJournalEntry(journalData, user.id);
+       }
+
+       if (result.success) {
+         toast({
+           title: data.isRecurring ? 'Recurring journal created' : 'Journal entry created',
+           description: `${data.reference} has been saved successfully.`,
+         });
+         
+         // Redirect back to journals
+         navigate('/accounting/journals');
+       } else {
+         toast({
+           title: 'Error',
+           description: result.error || 'Failed to create journal entry.',
+           variant: 'destructive',
+         });
+       }
+     } catch (error) {
+       console.error('Failed to create journal entry:', error);
+       toast({
+         title: 'Error',
+         description: 'Failed to create journal entry. Please try again.',
+         variant: 'destructive',
+       });
+     } finally {
+       setIsLoading(false);
+     }
   };
   
   const addLine = () => {
@@ -687,24 +768,70 @@ const CreateJournal = () => {
                     type="button"
                     variant="outline"
                     className="gap-1"
-                    onClick={() => {
-                      // TODO: Save as draft
-                      toast({
-                        title: "Draft saved",
-                        description: "Journal entry has been saved as a draft.",
-                      });
-                    }}
+                    disabled={isSaving}
+                    onClick={async () => {
+                       if (!user) {
+                         toast({
+                           title: 'Authentication required',
+                           description: 'You must be logged in to save a draft.',
+                           variant: 'destructive',
+                         });
+                         return;
+                       }
+
+                       setIsSaving(true);
+                       try {
+                         const formData = form.getValues();
+                         
+                         // Map form data to service interface
+                         const journalData = {
+                           date: formData.date,
+                           reference: formData.reference,
+                           description: formData.description,
+                           lines: formData.lines.map(line => ({
+                             account_id: line.account,
+                             description: line.description,
+                             debit_amount: line.debit ? parseFloat(line.debit) : undefined,
+                             credit_amount: line.credit ? parseFloat(line.credit) : undefined,
+                           })),
+                         };
+
+                         const result = await saveJournalAsDraft(journalData, user.id);
+                         
+                         if (result.success) {
+                           toast({
+                             title: "Draft saved",
+                             description: "Journal entry has been saved as a draft.",
+                           });
+                         } else {
+                           toast({
+                             title: "Error",
+                             description: result.error || "Failed to save draft.",
+                             variant: 'destructive',
+                           });
+                         }
+                       } catch (error) {
+                         console.error('Failed to save draft:', error);
+                         toast({
+                           title: "Error",
+                           description: "Failed to save draft. Please try again.",
+                           variant: 'destructive',
+                         });
+                       } finally {
+                         setIsSaving(false);
+                       }
+                     }}
                   >
                     <Save size={16} />
-                    Save as Draft
+                    {isSaving ? 'Saving...' : 'Save as Draft'}
                   </Button>
                   <Button 
                     type="submit" 
-                    disabled={!totals.isBalanced}
+                    disabled={!totals.isBalanced || isLoading}
                     className="gap-1"
                   >
                     <Send size={16} />
-                    Create Journal
+                    {isLoading ? 'Creating...' : 'Create Journal'}
                   </Button>
                 </div>
               </form>
